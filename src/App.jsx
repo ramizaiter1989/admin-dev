@@ -7,47 +7,11 @@ import { useTranslation } from "react-i18next";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { AgentLayout } from "@/components/AgentLayout";
 import { AuthPage } from "@/pages/AuthPage";
-import { HomePage } from "@/pages/HomePage";
-import { CarsPage } from "@/pages/CarsPage";
-import { CarDetailPage } from "@/pages/CarDetailPage";
-import { FavoritesPage } from "@/pages/FavoritesPage";
-import { AboutPage } from "@/pages/AboutPage";
-import { ContactPage } from "@/pages/ContactPage";
-import { ClientBookingPage } from "@/pages/ClientBookingPage";
-import { CreateCarPage } from "@/pages/CreateCarPage";
-import { MyCarsPage } from "@/pages/MyCarsPage";
-import { BookingChatSystem } from "@/pages/BookingChatSystem";
-import { AgentBookingsPage } from "@/pages/AgentBookingsPage";
-import { SocialMediaPage } from "@/pages/SocialMediaPage";
-import CarQualificationsPage from "@/pages/CarQualificationsPage";
-import DashboardPage from "@/pages/DashoardPage";
-import { SEO } from "@/components/SEO";
-import CompleteProfilePage from "@/pages/CompleteProfilePage";
-import { ClientBookingChat } from "@/pages/ClientBookingChat";
 import api from "@/lib/axios";
-import { StatisticPage } from "@/pages/StatisticPage";
-import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import TermsAndConditions from "@/pages/TermsAndConditions";
 import AdminPanelPage from "@/pages/AdminPanelPage";
 import AdminAuthPage from "@/pages/AdminAuthPage";
-import RealUserDataPage from "@/pages/RealUserDataPage";
-import AdsAnalyticsPage from "@/pages/AdsAnalyticsPage";
-import AdsPopup from "@/components/AdsPopup";
-
-// ============================
-// Helper functions
-// ============================
-const checkProfileComplete = async () => {
-  try {
-    const res = await api.get("/profile/status");
-    return res.data.is_complete;
-  } catch (err) {
-    console.error("Profile status check failed:", err);
-    return false;
-  }
-};
+import { SEO } from "@/components/SEO";
 
 // ============================
 // Route Guards
@@ -58,76 +22,12 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-const ProfileCompleteRoute = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const [isComplete, setIsComplete] = useState(false);
-  const isAuthenticated = !!localStorage.getItem("authToken");
-
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!isAuthenticated) {
-        setLoading(false);
-        return;
-      }
-      const complete = await checkProfileComplete();
-      setIsComplete(complete);
-      setLoading(false);
-    };
-    checkStatus();
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) return <Navigate to="/auth" replace />;
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-      </div>
-    );
-  if (!isComplete) return <Navigate to="/Complete-Profile" replace />;
-
-  return children;
-};
-
-const AgentRoute = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const [isComplete, setIsComplete] = useState(false);
-  const isAuthenticated = !!localStorage.getItem("authToken");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!isAuthenticated) {
-        setLoading(false);
-        return;
-      }
-      const complete = await checkProfileComplete();
-      setIsComplete(complete);
-      setLoading(false);
-    };
-    checkStatus();
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) return <Navigate to="/auth" replace />;
-  if (user.role !== "agency" && user.role !== "agent")
-    return <Navigate to="/" replace />;
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-      </div>
-    );
-  if (!isComplete) return <Navigate to="/Complete-Profile" replace />;
-
-  return children;
-};
-
 const AdminRoute = ({ children }) => {
   const isAuthenticated = !!localStorage.getItem("authToken");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   if (!isAuthenticated) return <Navigate to="/admin-auth" replace />;
-  if (user.role !== "admin")
-    return <Navigate to="/admin-auth" replace />;
+  if (user.role !== "admin") return <Navigate to="/admin-auth" replace />;
 
   return children;
 };
@@ -162,45 +62,16 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
           <Route
             path="/"
             element={
-              <>
-                <PageLayout>
-                  <HomePage />
+              <AdminRoute>
+                <PageLayout noIndex>
+                  <AdminPanelPage />
                 </PageLayout>
-                <AdsPopup />
-              </>
+              </AdminRoute>
             }
           />
-          <Route
-            path="/auth"
-            element={
-              <PageLayout noIndex>
-                <AuthPage />
-              </PageLayout>
-            }
-          />
-          <Route
-            path="/about"
-            element={
-              <PageLayout>
-                <AboutPage />
-              </PageLayout>
-            }
-          />
-          <Route
-            path="/contact"
-            element={
-              <PageLayout>
-                <ContactPage />
-              </PageLayout>
-            }
-          />
-          <Route path="/Privacy-Policy" element={<PrivacyPolicy />} />
-          <Route path="/Terms-and-Conditions" element={<TermsAndConditions />} />
-
           {/* Admin Routes */}
           <Route
             path="/admin-auth"
@@ -220,189 +91,6 @@ function App() {
               </AdminRoute>
             }
           />
-          <Route
-            path="/admin/real-user-data"
-            element={
-              <AdminRoute>
-                <PageLayout noIndex>
-                  <RealUserDataPage />
-                </PageLayout>
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/ads-analytics"
-            element={
-              <AdminRoute>
-                <PageLayout noIndex>
-                  <AdsAnalyticsPage />
-                </PageLayout>
-              </AdminRoute>
-            }
-          />
-
-          {/* Profile Completion */}
-          <Route
-            path="/Complete-Profile"
-            element={
-              <ProtectedRoute>
-                <PageLayout noIndex>
-                  <CompleteProfilePage />
-                </PageLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Agent / Agency Routes */}
-          <Route
-            path="/Dashboard"
-            element={
-              <AgentRoute>
-                <AgentLayout>
-                  <DashboardPage />
-                </AgentLayout>
-              </AgentRoute>
-            }
-          />
-          <Route
-            path="/Statistic"
-            element={
-              <AgentRoute>
-                <AgentLayout>
-                  <StatisticPage />
-                </AgentLayout>
-              </AgentRoute>
-            }
-          />
-          <Route
-            path="/Mycars"
-            element={
-              <AgentRoute>
-                <AgentLayout>
-                  <MyCarsPage />
-                </AgentLayout>
-              </AgentRoute>
-            }
-          />
-          <Route
-            path="/Mycars-bookings"
-            element={
-              <AgentRoute>
-                <AgentLayout>
-                  <AgentBookingsPage />
-                </AgentLayout>
-              </AgentRoute>
-            }
-          />
-          <Route
-            path="/add-car"
-            element={
-              <AgentRoute>
-                <AgentLayout>
-                  <CreateCarPage />
-                </AgentLayout>
-              </AgentRoute>
-            }
-          />
-          <Route
-            path="/Add/car/qualification"
-            element={
-              <AgentRoute>
-                <AgentLayout>
-                  <CarQualificationsPage />
-                </AgentLayout>
-              </AgentRoute>
-            }
-          />
-
-          {/* Protected / Authenticated Routes */}
-          <Route
-            path="/BookingChat"
-            element={
-              <ProfileCompleteRoute>
-                <PageLayout>
-                  <BookingChatSystem />
-                </PageLayout>
-              </ProfileCompleteRoute>
-            }
-          />
-          <Route
-            path="/client-Chat"
-            element={
-              <ProfileCompleteRoute>
-                <PageLayout>
-                  <ClientBookingChat />
-                </PageLayout>
-              </ProfileCompleteRoute>
-            }
-          />
-          <Route
-            path="/socialmedia"
-            element={
-              <PageLayout>
-                <SocialMediaPage />
-              </PageLayout>
-            }
-          />
-          <Route
-            path="/cars"
-            element={
-              <>
-                <ProfileCompleteRoute>
-                  <PageLayout>
-                    <CarsPage />
-                  </PageLayout>
-                </ProfileCompleteRoute>
-                <AdsPopup />
-              </>
-            }
-          />
-          <Route
-            path="/ClientBookings"
-            element={
-              <ProfileCompleteRoute>
-                <PageLayout>
-                  <ClientBookingPage />
-                </PageLayout>
-              </ProfileCompleteRoute>
-            }
-          />
-          <Route
-            path="/luxury-car-rental-lebanon"
-            element={
-              <>
-                <ProfileCompleteRoute>
-                  <PageLayout>
-                    <CarsPage />
-                  </PageLayout>
-                </ProfileCompleteRoute>
-                <AdsPopup />
-              </>
-            }
-          />
-          <Route
-            path="/cars/:id"
-            element={
-              <ProfileCompleteRoute>
-                <PageLayout>
-                  <CarDetailPage />
-                </PageLayout>
-              </ProfileCompleteRoute>
-            }
-          />
-          <Route
-            path="/favorites"
-            element={
-              <ProfileCompleteRoute>
-                <PageLayout>
-                  <FavoritesPage />
-                </PageLayout>
-              </ProfileCompleteRoute>
-            }
-          />
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toaster position="top-right" richColors />
       </BrowserRouter>
