@@ -972,60 +972,74 @@ export default function AdminPanelPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-12 mb-6 h-auto p-1 bg-gray-100 dark:bg-gray-800">
-            <TabsTrigger value="dashboard" className="text-xs">
-              <BarChart3 className="w-4 h-4 mr-1" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="users" className="text-xs">
-              <Users className="w-4 h-4 mr-1" />
-              Users
-            </TabsTrigger>
-            <TabsTrigger value="cars" className="text-xs">
-              <Car className="w-4 h-4 mr-1" />
-              Cars
-            </TabsTrigger>
-            <TabsTrigger value="bookings" className="text-xs">
-              <Calendar className="w-4 h-4 mr-1" />
-              Bookings
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="text-xs">
-              <DollarSign className="w-4 h-4 mr-1" />
-              Payments
-            </TabsTrigger>
-            <TabsTrigger value="announcements" className="text-xs">
-              <Megaphone className="w-4 h-4 mr-1" />
-              Announcements
-            </TabsTrigger>
-            <TabsTrigger value="appeals" className="text-xs">
-              <AlertCircle className="w-4 h-4 mr-1" />
-              Appeals
-            </TabsTrigger>
-            <TabsTrigger value="ads" className="text-xs">
-              <FileText className="w-4 h-4 mr-1" />
-              Ads
-            </TabsTrigger>
-            <TabsTrigger value="featured-cars" className="text-xs">
-              <Star className="w-4 h-4 mr-1" />
-              Featured
-            </TabsTrigger>
-            <TabsTrigger value="holidays" className="text-xs">
-              <CalendarDays className="w-4 h-4 mr-1" />
-              Holidays
-            </TabsTrigger>
-            <TabsTrigger value="suggestions" className="text-xs">
-              <Lightbulb className="w-4 h-4 mr-1" />
-              Suggestions
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs">
-              <Bell className="w-4 h-4 mr-1" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="otps" className="text-xs">
-              <KeyRound className="w-4 h-4 mr-1" />
-              OTPs
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex gap-6">
+
+  {/* Sidebar */}
+  <div className="w-64 shrink-0 rounded-2xl p-4 text-white sticky top-24 shadow-2xl border border-white/10"
+     style={{
+       background: "linear-gradient(180deg, #0E4C81 0%, #0A3B63 100%)"
+     }}>
+
+    <TabsList className="flex flex-col bg-transparent p-0 space-y-1">
+
+      <TabsTrigger value="dashboard" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <BarChart3 size={16}/> Dashboard
+      </TabsTrigger>
+
+      <TabsTrigger value="users" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <Users size={16}/> Users
+      </TabsTrigger>
+
+      <TabsTrigger value="cars" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <Car size={16}/> Cars
+      </TabsTrigger>
+
+      <TabsTrigger value="bookings" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <Calendar size={16}/> Bookings
+      </TabsTrigger>
+
+      <TabsTrigger value="payments" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <DollarSign size={16}/> Payments
+      </TabsTrigger>
+
+      <TabsTrigger value="announcements" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <Megaphone size={16}/> Announcements
+      </TabsTrigger>
+
+      <TabsTrigger value="appeals" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <AlertCircle size={16}/> Appeals
+      </TabsTrigger>
+
+      <TabsTrigger value="ads" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <FileText size={16}/> Ads
+      </TabsTrigger>
+
+      <TabsTrigger value="featured-cars" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <Star size={16}/> Featured Cars
+      </TabsTrigger>
+
+      <TabsTrigger value="holidays" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <CalendarDays size={16}/> Holidays
+      </TabsTrigger>
+
+      <TabsTrigger value="suggestions" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <Lightbulb size={16}/> Suggestions
+      </TabsTrigger>
+
+      <TabsTrigger value="notifications" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <Bell size={16}/> Notifications
+      </TabsTrigger>
+
+      <TabsTrigger value="otps" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
+        <KeyRound size={16}/> OTPs
+      </TabsTrigger>
+
+    </TabsList>
+  </div>
+
+  {/* Tabs Content Area */}
+  <div className="flex-1">
+
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
@@ -2157,6 +2171,8 @@ export default function AdminPanelPage() {
               </CardContent>
             </Card>
           </TabsContent>
+           </div>
+</div>
         </Tabs>
       </main>
 
