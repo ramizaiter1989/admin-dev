@@ -19,6 +19,10 @@ export const AdminLayout = () => {
         <NavLink to="/admin" end className={linkClass}>
           Dashboard
         </NavLink>
+        
+        <NavLink to="/admin/users" className={linkClass}>
+          Users
+        </NavLink>
 
         <NavLink to="/admin/cars" className={linkClass}>
           Cars

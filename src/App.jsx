@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { AuthPage } from "@/pages/AuthPage";
 import AdminAuthPage from "@/pages/AdminAuthPage";
 import { SEO } from "@/components/SEO";
+import AdminUsersPage from "@/pages/admin/AdminUsersPage";
 
 /* Admin */
 import { AdminLayout } from "@/pages/admin/AdminLayout";
@@ -84,6 +85,7 @@ function App() {
             <Route path="payments" element={<AdminPaymentsPage />} />
             <Route path="ads" element={<AdminAdsPage />} />
             <Route path="featured" element={<AdminFeaturedCarsPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
           </Route>
 
           {/* Redirects */}
