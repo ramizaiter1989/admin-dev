@@ -82,6 +82,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import api from '@/lib/axios';
+
 import { 
   getOtps, 
   createAd, 
@@ -970,72 +971,47 @@ export default function AdminPanelPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
+      <main className="container mx-auto px-4 sm:px-6 py-6 max-w-none w-full">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex gap-6">
 
   {/* Sidebar */}
-  <div className="w-64 shrink-0 rounded-2xl p-4 text-white sticky top-24 shadow-2xl border border-white/10"
-     style={{
-       background: "linear-gradient(180deg, #0E4C81 0%, #0A3B63 100%)"
-     }}>
+ <div className="w-64 shrink-0 rounded-2xl p-5 text-white sticky top-24 shadow-2xl border border-white/10 h-[calc(100vh-8rem)] overflow-y-auto bg-gradient-to-b from-[#0E4C81] to-[#0A3B63]">
 
-    <TabsList className="flex flex-col bg-transparent p-0 space-y-1">
+  {/* Push content down */}
+  <div className="pt-20">
 
-      <TabsTrigger value="dashboard" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <BarChart3 size={16}/> Dashboard
-      </TabsTrigger>
-
-      <TabsTrigger value="users" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <Users size={16}/> Users
-      </TabsTrigger>
-
-      <TabsTrigger value="cars" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <Car size={16}/> Cars
-      </TabsTrigger>
-
-      <TabsTrigger value="bookings" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <Calendar size={16}/> Bookings
-      </TabsTrigger>
-
-      <TabsTrigger value="payments" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <DollarSign size={16}/> Payments
-      </TabsTrigger>
-
-      <TabsTrigger value="announcements" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <Megaphone size={16}/> Announcements
-      </TabsTrigger>
-
-      <TabsTrigger value="appeals" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <AlertCircle size={16}/> Appeals
-      </TabsTrigger>
-
-      <TabsTrigger value="ads" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <FileText size={16}/> Ads
-      </TabsTrigger>
-
-      <TabsTrigger value="featured-cars" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <Star size={16}/> Featured Cars
-      </TabsTrigger>
-
-      <TabsTrigger value="holidays" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <CalendarDays size={16}/> Holidays
-      </TabsTrigger>
-
-      <TabsTrigger value="suggestions" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <Lightbulb size={16}/> Suggestions
-      </TabsTrigger>
-
-      <TabsTrigger value="notifications" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <Bell size={16}/> Notifications
-      </TabsTrigger>
-
-      <TabsTrigger value="otps" className="justify-start gap-3 text-sm data-[state=active]:bg-white data-[state=active]:text-[#0E4C81]">
-        <KeyRound size={16}/> OTPs
-      </TabsTrigger>
-
+    <TabsList className="flex flex-col bg-transparent p-0 space-y-2">
+      {[
+        ["dashboard", BarChart3, "Dashboard"],
+        ["users", Users, "Users"],
+        ["cars", Car, "Cars"],
+        ["bookings", Calendar, "Bookings"],
+        ["payments", DollarSign, "Payments"],
+        ["announcements", Megaphone, "Announcements"],
+        ["appeals", AlertCircle, "Appeals"],
+        ["ads", FileText, "Ads"],
+        ["featured-cars", Star, "Featured Cars"],
+        ["holidays", CalendarDays, "Holidays"],
+        ["suggestions", Lightbulb, "Suggestions"],
+        ["notifications", Bell, "Notifications"],
+        ["otps", KeyRound, "OTPs"],
+      ].map(([value, Icon, label]) => (
+        <TabsTrigger
+          key={value}
+          value={value}
+          className="flex items-center gap-3 text-sm px-3 py-2 rounded-lg text-white/90 hover:bg-white/10 hover:text-white transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-[#0E4C81] data-[state=active]:shadow-md"
+        >
+          <Icon size={16} />
+          {label}
+        </TabsTrigger>
+      ))}
     </TabsList>
+
   </div>
+</div>
+
+
 
   {/* Tabs Content Area */}
   <div className="flex-1">

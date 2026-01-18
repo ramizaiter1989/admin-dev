@@ -1,27 +1,27 @@
 import "@/index.css";
 import "@/App.css";
 import "@/i18n/config";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AuthPage } from "@/pages/AuthPage";
-import api from "@/lib/axios";
-import AdminPanelPage from "@/pages/AdminPanelPage";
 import AdminAuthPage from "@/pages/AdminAuthPage";
 import { SEO } from "@/components/SEO";
 
-// ============================
-// Route Guards
-// ============================
-const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem("authToken");
-  if (!isAuthenticated) return <Navigate to="/auth" replace />;
-  return children;
-};
+/* Admin */
+import { AdminLayout } from "@/pages/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminCarsPage from "@/pages/admin/AdminCarsPage";
+import AdminPaymentsPage from "@/pages/admin/AdminPaymentsPage";
+import AdminAdsPage from "@/pages/admin/AdminAdsPage";
+import AdminFeaturedCarsPage from "@/pages/admin/AdminFeaturedCarsPage";
 
+/* ============================
+   Route Guards
+============================ */
 const AdminRoute = ({ children }) => {
   const isAuthenticated = !!localStorage.getItem("authToken");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -32,23 +32,21 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-// ============================
-// Page Layout Wrapper
-// ============================
-const PageLayout = ({ children, noIndex = false }) => {
-  return (
-    <>
-      <SEO noIndex={noIndex} />
-      <Navbar />
-      {children}
-      <Footer />
-    </>
-  );
-};
+/* ============================
+   Public Layout
+============================ */
+const PageLayout = ({ children, noIndex = false }) => (
+  <>
+    <SEO noIndex={noIndex} />
+    <Navbar />
+    {children}
+    <Footer />
+  </>
+);
 
-// ============================
-// App
-// ============================
+/* ============================
+   App
+============================ */
 function App() {
   const { i18n } = useTranslation();
 
@@ -62,17 +60,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <AdminRoute>
-                <PageLayout noIndex>
-                  <AdminPanelPage />
-                </PageLayout>
-              </AdminRoute>
-            }
-          />
-          {/* Admin Routes */}
+          {/* Admin Auth */}
           <Route
             path="/admin-auth"
             element={
@@ -81,17 +69,28 @@ function App() {
               </PageLayout>
             }
           />
+
+          {/* Admin Panel */}
           <Route
-            path="/admin-panel-page"
+            path="/admin"
             element={
               <AdminRoute>
-                <PageLayout noIndex>
-                  <AdminPanelPage />
-                </PageLayout>
+                <AdminLayout />
               </AdminRoute>
             }
-          />
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="cars" element={<AdminCarsPage />} />
+            <Route path="payments" element={<AdminPaymentsPage />} />
+            <Route path="ads" element={<AdminAdsPage />} />
+            <Route path="featured" element={<AdminFeaturedCarsPage />} />
+          </Route>
+
+          {/* Redirects */}
+          <Route path="/" element={<Navigate to="/admin" replace />} />
+          <Route path="/admin-panel-page" element={<Navigate to="/admin" replace />} />
         </Routes>
+
         <Toaster position="top-right" richColors />
       </BrowserRouter>
     </div>

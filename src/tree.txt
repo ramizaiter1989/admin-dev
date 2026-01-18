@@ -1,0 +1,116 @@
+.
+├── App.css
+├── App.jsx
+├── components
+│   ├── admin
+│   │   ├── AdForm.jsx
+│   │   ├── AdminLayout.jsx
+│   │   ├── AdminProfile.jsx
+│   │   ├── FeaturedCarForm.jsx
+│   │   └── PaymentForm.jsx
+│   ├── AdsPopup.jsx
+│   ├── AgentLayout.jsx
+│   ├── AgentNavbar.jsx
+│   ├── CarCard.jsx
+│   ├── Footer.jsx
+│   ├── Navbar.jsx
+│   ├── partners.js
+│   ├── SEO.jsx
+│   ├── TrustPilotButton.jsx
+│   └── ui
+│       ├── accordion.jsx
+│       ├── alert-dialog.jsx
+│       ├── alert.jsx
+│       ├── aspect-ratio.jsx
+│       ├── avatar.jsx
+│       ├── badge.jsx
+│       ├── breadcrumb.jsx
+│       ├── button.jsx
+│       ├── calendar.jsx
+│       ├── card.jsx
+│       ├── carousel.jsx
+│       ├── checkbox.jsx
+│       ├── collapsible.jsx
+│       ├── command.jsx
+│       ├── context-menu.jsx
+│       ├── dialog.jsx
+│       ├── drawer.jsx
+│       ├── dropdown-menu.jsx
+│       ├── form.jsx
+│       ├── hover-card.jsx
+│       ├── input.jsx
+│       ├── input-otp.jsx
+│       ├── label.jsx
+│       ├── menubar.jsx
+│       ├── navigation-menu.jsx
+│       ├── pagination.jsx
+│       ├── popover.jsx
+│       ├── progress.jsx
+│       ├── radio-group.jsx
+│       ├── resizable.jsx
+│       ├── scroll-area.jsx
+│       ├── select.jsx
+│       ├── separator.jsx
+│       ├── sheet.jsx
+│       ├── skeleton.jsx
+│       ├── slider.jsx
+│       ├── sonner.jsx
+│       ├── switch.jsx
+│       ├── table.jsx
+│       ├── tabs.jsx
+│       ├── textarea.jsx
+│       ├── toaster.jsx
+│       ├── toast.jsx
+│       ├── toggle-group.jsx
+│       ├── toggle.jsx
+│       └── tooltip.jsx
+├── data
+│   └── carsData.js
+├── hooks
+│   ├── useAds.js
+│   ├── useAppFeesBalance.js
+│   ├── useAuth.js
+│   ├── useFeaturedCars.js
+│   ├── use-toast.js
+│   └── useUpdateAccess.js
+├── i18n
+│   ├── config.js
+│   └── locales
+│       ├── ar
+│       │   └── translation.json
+│       └── en
+│           └── translation.json
+├── index.css
+├── index.jsx
+├── lib
+│   ├── adminApi.example.js
+│   ├── adminApi.js
+│   ├── adsApi.js
+│   ├── api.js
+│   ├── axios.js
+│   ├── countries.json
+│   ├── firebase.js
+│   ├── otpApi.js
+│   └── utils.js
+├── pages
+│   ├── admin
+│   │   ├── AdminAdsPage.jsx
+│   │   ├── AdminCarsPage.jsx
+│   │   ├── AdminDashboard.jsx
+│   │   ├── AdminFeaturedCarsPage.jsx
+│   │   ├── AdminLayout.jsx
+│   │   └── AdminPaymentsPage.jsx
+│   ├── AdminAuthPage.jsx
+│   ├── AdminPanelPage.jsx
+│   └── AuthPage.jsx
+├── styles
+│   ├── animations.css
+│   ├── auth-animations.css
+│   └── homepage-animations.css
+├── tree.txt
+└── utils
+    ├── exportUtils.js
+    ├── localStorage.js
+    └── updateAccessHandler.js
+
+15 directories, 99 files
