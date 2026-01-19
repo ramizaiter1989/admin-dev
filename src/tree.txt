@@ -4,7 +4,6 @@
 ├── components
 │   ├── admin
 │   │   ├── AdForm.jsx
-│   │   ├── AdminLayout.jsx
 │   │   ├── AdminProfile.jsx
 │   │   ├── FeaturedCarForm.jsx
 │   │   └── PaymentForm.jsx
@@ -95,11 +94,13 @@
 ├── pages
 │   ├── admin
 │   │   ├── AdminAdsPage.jsx
+│   │   ├── AdminBookingsPage.jsx
 │   │   ├── AdminCarsPage.jsx
 │   │   ├── AdminDashboard.jsx
 │   │   ├── AdminFeaturedCarsPage.jsx
 │   │   ├── AdminLayout.jsx
-│   │   └── AdminPaymentsPage.jsx
+│   │   ├── AdminPaymentsPage.jsx
+│   │   └── AdminUsersPage.jsx
 │   ├── AdminAuthPage.jsx
 │   ├── AdminPanelPage.jsx
 │   └── AuthPage.jsx
@@ -113,4 +114,4 @@
     ├── localStorage.js
     └── updateAccessHandler.js
 
-15 directories, 99 files
+15 directories, 100 files

@@ -28,6 +28,10 @@ export const AdminLayout = () => {
           Cars
         </NavLink>
 
+        <NavLink to="/admin/bookings" className={linkClass}>
+          Bookings
+        </NavLink>
+
         <NavLink to="/admin/payments" className={linkClass}>
           Payments
         </NavLink>
