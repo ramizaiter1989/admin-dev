@@ -549,7 +549,7 @@ function UserDetailsView({ user, onEdit, onClose }) {
               Profile Picture
             </div>
             <a
-              href={fileUrl(user?.id_card_front)}
+              href={fileUrl(user?.profile_picture, DEFAULT_AVATAR)}
               target="_blank"
               rel="noreferrer"
             >
@@ -565,14 +565,14 @@ function UserDetailsView({ user, onEdit, onClose }) {
             </a>
           </div>
 
-          {/* Driver License (inside client) */}
+          {/* Driver License  */}
           <div>
             <div className="text-xs text-muted-foreground mb-2">
               Driver License
             </div>
             {client?.driver_license ? (
               <a
-                href={fileUrl(user?.id_card_front)}
+                href={fileUrl(client?.driver_license)}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -616,7 +616,7 @@ function UserDetailsView({ user, onEdit, onClose }) {
             </div>
             {user?.id_card_back ? (
               <a
-                href={fileUrl(user?.id_card_front)}
+                href={fileUrl(user?.id_card_back)}
                 target="_blank"
                 rel="noreferrer"
               >
