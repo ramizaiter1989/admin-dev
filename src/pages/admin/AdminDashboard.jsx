@@ -19,7 +19,7 @@ const AdminDashboard = () => {
         setLoading(true);
 
         // ======================
-        // USERS (WORKING)
+        // USERS
         // ======================
         const usersRes = await api.get("/admin/users");
         const totalUsers = usersRes.data?.users?.total ?? 0;
