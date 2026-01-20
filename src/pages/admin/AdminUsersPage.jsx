@@ -32,8 +32,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-// End Tony Update
 
+function truncate(text, max = 14) {
+  if (!text) return "N/A";
+  return text.length > max ? `${text.slice(0, max)}...` : text;
+}
+// End Tony Update
 const AdminUsersPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -288,9 +292,12 @@ const AdminUsersPage = () => {
                           }}
                         />
 
-                        {user.first_name && user.last_name
-                          ? `${user.first_name} ${user.last_name}`
-                          : user.username || "N/A"}
+                        {truncate(
+                          user.first_name && user.last_name
+                            ? `${user.first_name} ${user.last_name}`
+                            : user.username,
+                          14,
+                        )}
                       </span>
                       {/* End Tony Update */}
                     </TableCell>
@@ -638,4 +645,5 @@ function UserDetailsView({ user, onEdit, onClose }) {
     </div>
   );
 }
+
 // End Tony Update
