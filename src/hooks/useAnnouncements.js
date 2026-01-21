@@ -28,7 +28,7 @@ export default function useAnnouncements() {
 
       const res = await getAnnouncements(filters);
 
-      // ✅ CORRECT mapping
+  
       const announcementsData = res.data?.announcements;
 
       setAnnouncements(announcementsData?.data || []);
