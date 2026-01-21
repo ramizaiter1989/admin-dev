@@ -14,9 +14,10 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Plus } from "lucide-react";
+import { RefreshCw, Plus, Trash2 } from "lucide-react";
 import { getAds, deleteAd } from "@/lib/adminApi";
 import { toast } from "@/hooks/use-toast";
 
@@ -63,6 +64,7 @@ const AdminAdsPage = () => {
         <div className="flex gap-2">
           <Button
             size="sm"
+            aria-label="Create new ad"
             onClick={() => setShowForm((v) => !v)}
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -71,6 +73,7 @@ const AdminAdsPage = () => {
 
           <Button
             size="icon"
+            aria-label="refresh data"
             variant="outline"
             onClick={fetchAds}
           >
@@ -159,9 +162,10 @@ const AdminAdsPage = () => {
                       <Button
                         size="sm"
                         variant="destructive"
+                        aria-label="Delete ad"
                         onClick={() => handleDelete(ad.id)}
                       >
-                        Delete
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </TableCell>
                   </TableRow>
