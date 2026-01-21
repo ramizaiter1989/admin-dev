@@ -22,6 +22,7 @@ import AdminFeaturedCarsPage from "@/pages/admin/AdminFeaturedCarsPage";
 import AdminBookingsPage from "@/pages/admin/AdminBookingsPage";
 import AdminAnnouncementsPage from "@/pages/admin/AdminAnnouncementsPage";
 import AdminAppealsPage from "@/pages/admin/AdminAppealsPage";
+import AdminHolidaysPage from "@/pages/admin/AdminHolidaysPage";
 
 /* ============================
    Route Guards
@@ -92,6 +93,7 @@ function App() {
             <Route path="bookings" element={<AdminBookingsPage />} />
             <Route path="announcements" element={<AdminAnnouncementsPage />} />
             <Route path="appeals" element={<AdminAppealsPage />} />
+            <Route path="holidays" element={<AdminHolidaysPage />} />
           </Route>
 
           {/* Redirects */}

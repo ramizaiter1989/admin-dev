@@ -1,75 +1,72 @@
-import { useEffect, useState } from "react";
-import {
-  getAnnouncements,
-  deleteAnnouncement,
-} from "@/lib/adminApi";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState, useCallback } from "react";
+import { getAnnouncements, deleteAnnouncement } from "@/lib/adminApi";
+import { toast } from "@/hooks/use-toast";
 
 export default function useAnnouncements() {
-  const { toast } = useToast();
-
   const [announcements, setAnnouncements] = useState([]);
   const [meta, setMeta] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState({
     search: "",
     status: "",
-    priority: "",
-    target_audience: "",
-    sort: "latest",
     page: 1,
-    per_page: 50,
   });
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      const response = await getAnnouncements({
+        search: filters.search || undefined,
+        status: filters.status || undefined,
+        page: filters.page,
+      });
 
-      const res = await getAnnouncements(filters);
+      console.log("ANNOUNCEMENTS API RESPONSE:", response.data);
 
-  
-      const announcementsData = res.data?.announcements;
-
-      setAnnouncements(announcementsData?.data || []);
-      setMeta(announcementsData || null);
-
+      setAnnouncements(response.data.announcements.data);
+      setMeta(response.data.announcements);
     } catch (error) {
+      console.error(error);
       toast({
-        title: "Error",
-        description: "Failed to load announcements",
+        title: "Failed to load announcements",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, [fetchAnnouncements]);
+
+  const refresh = () => {
+    fetchAnnouncements();
   };
 
   const removeAnnouncement = async (id) => {
+    if (!confirm("Delete this announcement?")) return;
+
     try {
       await deleteAnnouncement(id);
-      toast({ title: "Announcement deleted successfully" });
+      toast({ title: "Announcement deleted" });
       fetchAnnouncements();
     } catch {
       toast({
-        title: "Delete failed",
-        description: "Could not delete announcement",
+        title: "Failed to delete announcement",
         variant: "destructive",
       });
     }
   };
 
-  useEffect(() => {
-    fetchAnnouncements();
-  }, [filters]);
-
   return {
-    announcements,
-    meta,              // 👈 pagination info
+    announcements, 
+    meta,          
     loading,
     filters,
     setFilters,
-    refresh: fetchAnnouncements,
+    refresh,
     removeAnnouncement,
   };
 }

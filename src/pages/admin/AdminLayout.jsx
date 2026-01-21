@@ -50,6 +50,9 @@ export const AdminLayout = () => {
         <NavLink to="/admin/appeals" className={linkClass}>
           Appeals
         </NavLink>
+        <NavLink to="/admin/holidays" className={linkClass}>
+          Holidays
+        </NavLink>
       </aside>
 
       {/* Page content */}

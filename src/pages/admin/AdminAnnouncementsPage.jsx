@@ -25,16 +25,16 @@ import { RefreshCcw, Trash } from "lucide-react";
 
 export default function AdminAnnouncementsPage() {
   const {
-    announcements,        // ✅ ARRAY
-    meta,                 // ✅ PAGINATION
+    announcements,       
+    meta,                 
     loading,
     filters,
     setFilters,
     refresh,
-    removeAnnouncement,   // ✅ FUNCTION
+    removeAnnouncement,   
   } = useAnnouncements();
 
-  console.log("ANNOUNCEMENTS IN PAGE:", announcements); // 👈 DEBUG (you WILL see data)
+  console.log("ANNOUNCEMENTS IN PAGE:", announcements); 
 
   return (
     <div className="space-y-6">
@@ -102,10 +102,11 @@ export default function AdminAnnouncementsPage() {
                 <TableCell className="text-right">
                   <Button
                     size="icon"
-                    variant="ghost"
+                    aria-label="Delete announcement"
+                    variant="destructive"
                     onClick={() => removeAnnouncement(a.id)}
                   >
-                    <Trash className="w-4 h-4 text-red-500" />
+                    <Trash className="w-3 h-3" />
                   </Button>
                 </TableCell>
               </TableRow>

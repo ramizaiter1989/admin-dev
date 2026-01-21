@@ -17,7 +17,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Plus, Trash2 } from "lucide-react";
+import { RefreshCw, Plus, Trash } from "lucide-react";
 import { getAds, deleteAd } from "@/lib/adminApi";
 import { toast } from "@/hooks/use-toast";
 
@@ -165,7 +165,7 @@ const AdminAdsPage = () => {
                         aria-label="Delete ad"
                         onClick={() => handleDelete(ad.id)}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash className="h-3 w-3" />
                       </Button>
                     </TableCell>
                   </TableRow>

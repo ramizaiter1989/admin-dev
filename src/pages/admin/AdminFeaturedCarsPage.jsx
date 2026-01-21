@@ -14,7 +14,7 @@ import {
   TableBody,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Plus, Trash2 } from "lucide-react";
+import { RefreshCw, Plus, Trash } from "lucide-react";
 import {
   getFeaturedCars,
   deleteFeaturedCar,
@@ -162,7 +162,7 @@ const AdminFeaturedCarsPage = () => {
                         variant="destructive"
                         onClick={() => handleDelete(item.id)}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash className="h-3 w-3" />
                       </Button>
                     </TableCell>
                   </TableRow>

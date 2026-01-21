@@ -28,8 +28,6 @@ export const Navbar = () => {
     if (shouldBeDark) document.documentElement.classList.add('dark');
   }, []);
 
-  // ✅ Favorite count from API (Laravel)
-  // GET /cars/favorites/list returns: { favorites: { total, ... } }
   const fetchFavCount = useCallback(async () => {
     try {
       const res = await api.get('/cars/favorites/list', {
