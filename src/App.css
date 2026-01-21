@@ -33,18 +33,12 @@
   }
 }
 /* Start Tony Update  */
-.user-name-hover {
+.item-name-hover {
   cursor: pointer;
   transition: color 0.2s ease;
 }
-.user-name-hover:hover {
+.item-name-hover:hover {
   text-decoration: underline;
 }
-.car-make-model-hover {
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-.car-make-model-hover:hover {
-  text-decoration: underline;
-}
+
 /* End Tony Update  */
