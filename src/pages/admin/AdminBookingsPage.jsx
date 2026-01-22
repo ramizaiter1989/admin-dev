@@ -37,7 +37,16 @@ import {
   AlertTriangle,
   RefreshCw,
   ArrowUpDown,
+  Calendar as CalendarIcon,
 } from "lucide-react";
+
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
 
 /* ================= CONFIG ================= */
 
@@ -49,6 +58,12 @@ const statusColor = {
   rejected: "bg-gray-200 text-gray-700",
 };
 
+// End Tony Update
+function truncate(text, max = 14) {
+  if (!text) return "N/A";
+  return text.length > max ? `${text.slice(0, max)}...` : text;
+}
+// End Tony Update
 /* ================= PAGE ================= */
 
 export default function AdminBookingsPage() {
@@ -75,6 +90,10 @@ export default function AdminBookingsPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
+
+  // Tony Comment do not remove
+  // /* ----------  CALENDER RANGE  ---------- */
+  // const [dateRange, setDateRange] = useState({ from: null, to: null });
   // End Tony Update
 
   /* ================= FETCH ================= */
@@ -136,6 +155,23 @@ export default function AdminBookingsPage() {
 
   const filteredBookings = useMemo(() => {
     let data = [...bookings];
+
+    // Tony Comment do not remove
+    // if (dateRange?.from) {
+    //   const from = new Date(dateRange.from);
+    //   from.setHours(0, 0, 0, 0);
+
+    //   const to = dateRange?.to
+    //     ? new Date(dateRange.to)
+    //     : new Date(dateRange.from);
+    //   to.setHours(23, 59, 59, 999);
+
+    //   data = data.filter((b) => {
+    //     const d = new Date(b.start_datetime);
+    //     if (Number.isNaN(d.getTime())) return false;
+    //     return d >= from && d <= to;
+    //   });
+    // }
 
     if (search) {
       data = data.filter((b) =>
@@ -205,6 +241,22 @@ export default function AdminBookingsPage() {
     fetchBookings();
   };
 
+  /* ============================
+     Fetch user Profile picture tony 
+  ============================ */
+  const DEFAULT_AVATAR = "/avatar.png";
+  const ASSET_BASE = "https://rento-lb.com/api/storage/";
+  const getProfileImg = (u) => {
+    const p = u?.client.profile_picture;
+    if (!p) return DEFAULT_AVATAR;
+
+    if (p.startsWith("http")) return p;
+    const cleaned = p.startsWith("/") ? p.slice(1) : p;
+
+    return ASSET_BASE + cleaned;
+  };
+
+  //End Tony Update
   /* ================= RENDER ================= */
 
   return (
@@ -214,6 +266,52 @@ export default function AdminBookingsPage() {
         <h1 className="text-xl font-semibold">Bookings</h1>
 
         <div className="flex items-center gap-3">
+          {/* Tony Comment please do not delete it  */}
+          {/* <Input
+            placeholder="Search…"
+            className="h-8 w-44 text-xs"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          /> */}
+          {/* <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-8 text-xs gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange?.to ? (
+                    <>
+                      {format(dateRange.from, "yyyy-MM-dd")} →{" "}
+                      {format(dateRange.to, "yyyy-MM-dd")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "yyyy-MM-dd")
+                  )
+                ) : (
+                  "Date range"
+                )}
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                numberOfMonths={1}
+                selected={dateRange}
+                onSelect={setDateRange}
+              />
+
+              <div className="p-2 flex justify-end gap-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDateRange({ from: null, to: null })}
+                >
+                  Clear
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover> */}
+
           <div className="px-3 py-1.5 rounded-lg border bg-muted text-sm font-semibold">
             Total: ${totalBookingsAmount.toLocaleString()}
           </div>
@@ -306,7 +404,19 @@ export default function AdminBookingsPage() {
                     className="item-name-hover inline-flex items-center gap-2 cursor-pointer"
                     title={userBookingTooltip(b)}
                   >
-                    {clients[b.client_id] || `User #${b.client_id}`}
+                    <img
+                      src={getProfileImg(b)}
+                      alt={b.client.username || "User"}
+                      className="h-7 w-7 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/avatar.png";
+                      }}
+                    />
+                    {truncate(
+                      clients[b.client_id] || `User #${b.client_id}`,
+                      14,
+                    )}
                   </span>
                 </TableCell>
                 <TableCell>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/axios";
-import { Eye, Pencil, Trash2, Search, Edit } from "lucide-react";
+import { Eye, Pencil, Trash2, Search, Edit, Users } from "lucide-react";
 
 import {
   Table,
@@ -59,8 +59,9 @@ const AdminUsersPage = () => {
 
   /* filters */
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState("all");
+  const [roles, setRoles] = useState([]);
   const [sort, setSort] = useState("newest");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   /* ============================
      Fetch users
@@ -134,9 +135,15 @@ const AdminUsersPage = () => {
       );
     }
 
-    // role filter
-    if (role !== "all") {
-      data = data.filter((u) => u.role === role);
+    // role filter (multi)
+    if (roles.length > 0) {
+      data = data.filter((u) => roles.includes(u.role));
+    }
+
+    // status filter
+    if (statusFilter !== "all") {
+      const isActive = statusFilter === "active";
+      data = data.filter((u) => !!u.update_access === isActive);
     }
 
     // sort
@@ -151,7 +158,7 @@ const AdminUsersPage = () => {
     }
 
     return data;
-  }, [users, search, role, sort]);
+  }, [users, search, roles, statusFilter, sort]);
 
   /* ============================
      Actions
@@ -218,10 +225,6 @@ const AdminUsersPage = () => {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Users</h1>
-
-        <Badge variant="secondary" className="text-sm">
-          Total users: {total}
-        </Badge>
       </div>
 
       {/* FILTER BAR */}
@@ -238,19 +241,6 @@ const AdminUsersPage = () => {
             />
           </div>
 
-          {/* Role */}
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger>
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All roles</SelectItem>
-              <SelectItem value="client">Client</SelectItem>
-              <SelectItem value="agency">Agency</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* Sort */}
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger>
@@ -262,6 +252,74 @@ const AdminUsersPage = () => {
               <SelectItem value="za">Z–A</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Status */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="all">All status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="blocked">Blocked</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Roles (Checklist) */}
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Roles</div>
+
+            <div className="flex flex-wrap gap-4">
+              {["client", "agency", "admin"].map((r) => {
+                const checked = roles.includes(r);
+
+                return (
+                  <label
+                    key={r}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setRoles((prev) =>
+                          isChecked
+                            ? [...prev, r]
+                            : prev.filter((x) => x !== r),
+                        );
+                      }}
+                    />
+                    <span className="capitalize">{r}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {roles.length > 0 && (
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted-foreground underline"
+                onClick={() => setRoles([])}
+              >
+                Clear role filter
+              </button>
+            )}
+          </Card>
+
+          <Card className="border-muted/60">
+            <CardContent className="p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>Total users</span>
+              </div>
+
+              <div className="text-lg font-semibold tabular-nums">
+                {filteredUsers.length}
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 
@@ -441,6 +499,7 @@ export async function openUserView(
     setModalOpen(true);
   }
 }
+
 function formatDateOnly(value) {
   if (!value) return "N/A";
   const d = new Date(value);
@@ -478,9 +537,48 @@ function fileUrl(path, fallback = null) {
   return ASSET_BASE + cleaned;
 }
 
+function isPdf(pathOrUrl) {
+  if (!pathOrUrl) return false;
+  return String(pathOrUrl).toLowerCase().split("?")[0].endsWith(".pdf");
+}
+
+function DocCard({ title, path, fallback = null }) {
+  const url = fileUrl(path, fallback);
+
+  if (!url) {
+    return <div className="text-sm text-muted-foreground">N/A</div>;
+  }
+
+  // If PDF → show PDF inside the card
+  if (isPdf(url)) {
+    const pdfUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
+    return (
+      <iframe
+        title={title}
+        src={pdfUrl}
+        className="w-full max-w-[260px] h-[180px] rounded-md border bg-white"
+      />
+    );
+  }
+
+  // If Image → show thumbnail
+  return (
+    <img
+      src={url}
+      alt={title}
+      className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
+      onError={(e) => {
+        if (fallback) {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = fallback;
+        }
+      }}
+    />
+  );
+}
+
 function UserDetailsView({ user, onEdit, onClose }) {
   const client = user?.client || {};
-  const qc = client?.qualification_code || {};
 
   function FieldRow({ label, value }) {
     return (
@@ -586,81 +684,29 @@ function UserDetailsView({ user, onEdit, onClose }) {
           {/* Profile Picture */}
           <div>
             <div className="text-muted-foreground">Profile Picture</div>
-            <a
-              href={fileUrl(user?.profile_picture, DEFAULT_AVATAR)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <img
-                src={fileUrl(user?.profile_picture, DEFAULT_AVATAR)}
-                alt="Profile"
-                className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = DEFAULT_AVATAR;
-                }}
-              />
-            </a>
+            <DocCard
+              title="Profile Picture"
+              path={user?.profile_picture}
+              fallback={DEFAULT_AVATAR}
+            />
           </div>
 
-          {/* Driver License  */}
+          {/* Driver License */}
           <div>
             <div className="text-muted-foreground">Driver License</div>
-            {client?.driver_license ? (
-              <a
-                href={fileUrl(client?.driver_license)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <img
-                  src={fileUrl(client?.driver_license)}
-                  alt="Driver License"
-                  className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                />
-              </a>
-            ) : (
-              <div className="text-sm text-muted-foreground">N/A</div>
-            )}
+            <DocCard title="Driver License" path={client?.driver_license} />
           </div>
 
           {/* ID Card Front */}
           <div>
             <div className="text-muted-foreground">ID Card Front</div>
-            {user?.id_card_front ? (
-              <a
-                href={fileUrl(user?.id_card_front)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <img
-                  src={fileUrl(user?.id_card_front)}
-                  alt="ID Card Front"
-                  className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                />
-              </a>
-            ) : (
-              <div className="text-sm text-muted-foreground">N/A</div>
-            )}
+            <DocCard title="ID Card Front" path={user?.id_card_front} />
           </div>
 
           {/* ID Card Back */}
           <div>
             <div className="text-muted-foreground">ID Card Back</div>
-            {user?.id_card_back ? (
-              <a
-                href={fileUrl(user?.id_card_back)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <img
-                  src={fileUrl(user?.id_card_back)}
-                  alt="ID Card Back"
-                  className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                />
-              </a>
-            ) : (
-              <div className="text-sm text-muted-foreground">N/A</div>
-            )}
+            <DocCard title="ID Card Back" path={user?.id_card_back} />
           </div>
         </div>
       </div>

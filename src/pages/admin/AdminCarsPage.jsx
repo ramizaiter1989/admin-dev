@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api from "@/lib/axios";
-import { Search } from "lucide-react";
+import { Search, Car } from "lucide-react";
 
 import {
   Table,
@@ -39,8 +39,8 @@ const AdminCarsPage = () => {
 
   // filters
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [categories, setCategories] = useState([]);
+  const [status, setStatus] = useState([]);
   const [sort, setSort] = useState("newest");
 
   // Start Tony Update
@@ -58,6 +58,13 @@ const AdminCarsPage = () => {
     message: "",
     onConfirm: null,
   });
+
+  const [yearFrom, setYearFrom] = useState("");
+  const [yearTo, setYearTo] = useState("");
+
+  const [rateFrom, setRateFrom] = useState("");
+  const [rateTo, setRateTo] = useState("");
+
   // End Tony Update
   /* ============================
      Fetch cars
@@ -122,6 +129,18 @@ const AdminCarsPage = () => {
       toast.error("Failed to delete car");
     }
   };
+
+  const toNumber = (v) => {
+    if (v === null || v === undefined || v === "") return NaN;
+
+    if (typeof v === "number") return v;
+
+    const cleaned = String(v).replace(/[^0-9.]/g, "");
+    const n = Number(cleaned);
+
+    return Number.isNaN(n) ? NaN : n;
+  };
+
   // End tony Update
   /* ============================
      Filter + sort
@@ -141,14 +160,49 @@ const AdminCarsPage = () => {
       );
     }
 
-    // category
-    if (category !== "all") {
-      data = data.filter((c) => c.car_category === category);
+    // categories (multi)
+    if (categories.length > 0) {
+      data = data.filter((c) => categories.includes(c.car_category));
     }
 
     // status (reserved / available)
-    if (status !== "all") {
-      data = data.filter((c) => c.status === status);
+    if (status.length > 0) {
+      data = data.filter((c) => status.includes(c.status));
+    }
+
+    // year range
+    const from = yearFrom ? Number(yearFrom) : null;
+    const to = yearTo ? Number(yearTo) : null;
+
+    if (from !== null || to !== null) {
+      data = data.filter((c) => {
+        const y = Number(c.year);
+        if (Number.isNaN(y)) return false;
+
+        if (from !== null && y < from) return false;
+        if (to !== null && y > to) return false;
+
+        return true;
+      });
+    }
+
+    // daily rate range
+    const rFrom = rateFrom !== "" ? toNumber(rateFrom) : null;
+    const rTo = rateTo !== "" ? toNumber(rateTo) : null;
+
+    if (rFrom !== null || rTo !== null) {
+      data = data.filter((c) => {
+        const rate = toNumber(c.daily_rate);
+
+        // if car has invalid rate, ignore it (or return false if you prefer)
+        if (Number.isNaN(rate)) return false;
+
+        if (rFrom !== null && !Number.isNaN(rFrom) && rate < rFrom)
+          return false;
+        if (rTo !== null && !Number.isNaN(rTo) && rate > rTo) return false;
+
+        return true;
+      });
     }
 
     // sort
@@ -157,11 +211,49 @@ const AdminCarsPage = () => {
     }
 
     if (sort === "price") {
-      data.sort((a, b) => Number(a.daily_rate) - Number(b.daily_rate));
+      data.sort((a, b) => {
+        const ar = toNumber(a.daily_rate);
+        const br = toNumber(b.daily_rate);
+        if (Number.isNaN(ar) && Number.isNaN(br)) return 0;
+        if (Number.isNaN(ar)) return 1;
+        if (Number.isNaN(br)) return -1;
+        return ar - br;
+      });
     }
 
+    if (sort === "year_asc" || sort === "year_desc") {
+      data.sort((a, b) => {
+        const ay = Number(a.year);
+        const by = Number(b.year);
+        if (Number.isNaN(ay) && Number.isNaN(by)) return 0;
+        if (Number.isNaN(ay)) return 1;
+        if (Number.isNaN(by)) return -1;
+        return sort === "year_asc" ? ay - by : by - ay;
+      });
+    }
+
+    if (sort === "views_asc" || sort === "views_desc") {
+      data.sort((a, b) => {
+        const av = Number(a.views_count);
+        const bv = Number(b.views_count);
+        if (Number.isNaN(av) && Number.isNaN(bv)) return 0;
+        if (Number.isNaN(av)) return 1;
+        if (Number.isNaN(bv)) return -1;
+        return sort === "views_asc" ? av - bv : bv - av;
+      });
+    }
     return data;
-  }, [cars, search, category, status, sort]);
+  }, [
+    cars,
+    search,
+    categories,
+    status,
+    sort,
+    yearFrom,
+    yearTo,
+    rateFrom,
+    rateTo,
+  ]);
 
   /* ============================
      Render
@@ -171,7 +263,6 @@ const AdminCarsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Cars</h1>
-        <Badge variant="secondary">Total cars: {total}</Badge>
       </div>
 
       {/* Filters */}
@@ -188,31 +279,6 @@ const AdminCarsPage = () => {
             />
           </div>
 
-          {/* Category */}
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="luxury">Luxury</SelectItem>
-              <SelectItem value="sport">Sport</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Status */}
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="available">Available</SelectItem>
-              <SelectItem value="reserved">Reserved</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* Sort */}
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger>
@@ -221,8 +287,195 @@ const AdminCarsPage = () => {
             <SelectContent>
               <SelectItem value="newest">Newest</SelectItem>
               <SelectItem value="price">Price (low → high)</SelectItem>
+
+              <SelectItem value="year_asc">Model Year (low → high)</SelectItem>
+              <SelectItem value="year_desc">Model Year (high → low)</SelectItem>
+
+              <SelectItem value="views_asc">Views (low → high)</SelectItem>
+              <SelectItem value="views_desc">Views (high → low)</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Categories */}
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Categories</div>
+            <div className="flex flex-wrap gap-4">
+              {["normal", "luxury", "sport"].map((cat) => {
+                const checked = categories.includes(cat);
+                return (
+                  <label
+                    key={cat}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setCategories((prev) =>
+                          isChecked
+                            ? [...prev, cat]
+                            : prev.filter((x) => x !== cat),
+                        );
+                      }}
+                    />
+                    <span className="capitalize">{cat}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {categories.length > 0 && (
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted-foreground underline"
+                onClick={() => setCategories([])}
+              >
+                Clear category filter
+              </button>
+            )}
+          </Card>
+
+          {/* Status */}
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Status</div>
+
+            <div className="flex flex-wrap gap-4">
+              {["available", "reserved"].map((st) => {
+                const checked = status.includes(st);
+
+                return (
+                  <label
+                    key={st}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setStatus((prev) =>
+                          isChecked
+                            ? [...prev, st]
+                            : prev.filter((x) => x !== st),
+                        );
+                      }}
+                    />
+                    <span className="capitalize">{st}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {status.length > 0 && (
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted-foreground underline"
+                onClick={() => setStatus([])}
+              >
+                Clear status filter
+              </button>
+            )}
+          </Card>
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Year</div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">From</div>
+                <Input
+                  type="number"
+                  placeholder="e.g. 2015"
+                  value={yearFrom}
+                  onChange={(e) => setYearFrom(e.target.value)}
+                  min={1900}
+                  max={new Date().getFullYear() + 1}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">To</div>
+                <Input
+                  type="number"
+                  placeholder="e.g. 2030"
+                  value={yearTo}
+                  onChange={(e) => setYearTo(e.target.value)}
+                  min={1900}
+                  max={new Date().getFullYear() + 1}
+                />
+              </div>
+            </div>
+
+            {(yearFrom || yearTo) && (
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted-foreground underline"
+                onClick={() => {
+                  setYearFrom("");
+                  setYearTo("");
+                }}
+              >
+                Clear year filter
+              </button>
+            )}
+          </Card>
+
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Daily Rate</div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">From</div>
+                <Input
+                  type="number"
+                  placeholder="e.g. 20"
+                  value={rateFrom}
+                  onChange={(e) => setRateFrom(e.target.value)}
+                  min={0}
+                  step="1"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">To</div>
+                <Input
+                  type="number"
+                  placeholder="e.g. 150"
+                  value={rateTo}
+                  onChange={(e) => setRateTo(e.target.value)}
+                  min={0}
+                  step="1"
+                />
+              </div>
+            </div>
+
+            {(rateFrom || rateTo) && (
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted-foreground underline"
+                onClick={() => {
+                  setRateFrom("");
+                  setRateTo("");
+                }}
+              >
+                Clear rate filter
+              </button>
+            )}
+          </Card>
+
+          {/* Total Cars  */}
+          <Card className="border-muted/60">
+            <CardContent className="p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Car className="h-4 w-4" />
+                <span>Total cars</span>
+              </div>
+
+              <div className="text-lg font-semibold tabular-nums">
+                {filteredCars.length}
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 

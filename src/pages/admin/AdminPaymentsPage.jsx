@@ -29,13 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-import {
-  Eye,
-  Edit,
-  RefreshCw,
-  ArrowUpDown,
-  Plus,
-} from "lucide-react";
+import { Eye, Edit, RefreshCw, ArrowUpDown, Plus } from "lucide-react";
 
 /* ================= STYLES ================= */
 
@@ -49,7 +43,12 @@ const typeColor = {
   income: "bg-blue-100 text-blue-700",
   expense: "bg-purple-100 text-purple-700",
 };
-
+// Start Update Tony
+function truncate(text, max = 14) {
+  if (!text) return "N/A";
+  return text.length > max ? `${text.slice(0, max)}...` : text;
+}
+// End Update Tony
 /* ================= PAGE ================= */
 
 export default function AdminPaymentsPage() {
@@ -110,13 +109,11 @@ export default function AdminPaymentsPage() {
       data = data.filter((p) =>
         `${p.id} ${p.reference_id} ${p.user?.first_name ?? ""} ${p.user?.last_name ?? ""}`
           .toLowerCase()
-          .includes(search.toLowerCase())
+          .includes(search.toLowerCase()),
       );
     }
 
-    data.sort((a, b) =>
-      sortAsc ? a.amount - b.amount : b.amount - a.amount
-    );
+    data.sort((a, b) => (sortAsc ? a.amount - b.amount : b.amount - a.amount));
 
     return data;
   }, [payments, search, sortAsc]);
@@ -182,7 +179,22 @@ export default function AdminPaymentsPage() {
       toast.error("Failed to create payment");
     }
   };
+  /* ============================
+     Fetch user Profile picture tony 
+  ============================ */
+  const DEFAULT_AVATAR = "/avatar.png";
+  const ASSET_BASE = "https://rento-lb.com/api/storage/";
+  const getProfileImg = (u) => {
+    const p = u?.user.profile_picture;
+    if (!p) return DEFAULT_AVATAR;
 
+    if (p.startsWith("http")) return p;
+    const cleaned = p.startsWith("/") ? p.slice(1) : p;
+
+    return ASSET_BASE + cleaned;
+  };
+
+  //End Tony Update
   /* ================= RENDER ================= */
 
   return (
@@ -242,23 +254,44 @@ export default function AdminPaymentsPage() {
           <TableBody>
             {filteredPayments.map((p) => (
               <TableRow key={p.id}>
-                <TableCell>{p.id}</TableCell>
                 <TableCell>
-                  {p.user
-                    ? `${p.user.first_name} ${p.user.last_name}`
-                    : "—"}
+                  <span
+                    className="item-name-hover inline-flex items-center gap-2 cursor-pointer"
+                    title={paymentTooltip(p)}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => viewPayment(p)}
+                  >
+                    {p.id}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className="item-name-hover inline-flex items-center gap-2 cursor-pointer"
+                    title={userTooltip(p)}
+                  >
+                    <img
+                      src={getProfileImg(p)}
+                      alt={p.user.username || "User"}
+                      className="h-7 w-7 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/avatar.png";
+                      }}
+                    />
+                    {truncate(
+                      p.user ? `${p.user.first_name} ${p.user.last_name}` : "—",
+                      14,
+                    )}
+                  </span>
                 </TableCell>
 
                 <TableCell>
-                  <Badge className={typeColor[p.type]}>
-                    {p.type}
-                  </Badge>
+                  <Badge className={typeColor[p.type]}>{p.type}</Badge>
                 </TableCell>
 
                 <TableCell>
-                  <Badge className={statusColor[p.status]}>
-                    {p.status}
-                  </Badge>
+                  <Badge className={statusColor[p.status]}>{p.status}</Badge>
                 </TableCell>
 
                 <TableCell>{p.source}</TableCell>
@@ -288,7 +321,10 @@ export default function AdminPaymentsPage() {
 
             {!loading && filteredPayments.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-10 text-muted-foreground"
+                >
                   No payments found
                 </TableCell>
               </TableRow>
@@ -307,15 +343,35 @@ export default function AdminPaymentsPage() {
 
           {selectedPayment && (
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><b>ID:</b> {selectedPayment.id}</div>
-              <div><b>Reference:</b> {selectedPayment.reference_id}</div>
-              <div><b>User:</b> {selectedPayment.user?.first_name} {selectedPayment.user?.last_name}</div>
-              <div><b>Type:</b> {selectedPayment.type}</div>
-              <div><b>Status:</b> {selectedPayment.status}</div>
-              <div><b>Source:</b> {selectedPayment.source}</div>
-              <div><b>Amount:</b> ${selectedPayment.amount}</div>
-              <div><b>Due:</b> {new Date(selectedPayment.due_date).toLocaleString()}</div>
-              <div className="col-span-2"><b>Description:</b> {selectedPayment.description || "—"}</div>
+              <div>
+                <b>ID:</b> {selectedPayment.id}
+              </div>
+              <div>
+                <b>Reference:</b> {selectedPayment.reference_id}
+              </div>
+              <div>
+                <b>User:</b> {selectedPayment.user?.first_name}{" "}
+                {selectedPayment.user?.last_name}
+              </div>
+              <div>
+                <b>Type:</b> {selectedPayment.type}
+              </div>
+              <div>
+                <b>Status:</b> {selectedPayment.status}
+              </div>
+              <div>
+                <b>Source:</b> {selectedPayment.source}
+              </div>
+              <div>
+                <b>Amount:</b> ${selectedPayment.amount}
+              </div>
+              <div>
+                <b>Due:</b>{" "}
+                {new Date(selectedPayment.due_date).toLocaleString()}
+              </div>
+              <div className="col-span-2">
+                <b>Description:</b> {selectedPayment.description || "—"}
+              </div>
             </div>
           )}
         </DialogContent>
@@ -339,7 +395,9 @@ export default function AdminPaymentsPage() {
                     setEditingPayment({ ...editingPayment, status: v })
                   }
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="paid">Paid</SelectItem>
@@ -353,7 +411,10 @@ export default function AdminPaymentsPage() {
                 <Input
                   value={editingPayment.source}
                   onChange={(e) =>
-                    setEditingPayment({ ...editingPayment, source: e.target.value })
+                    setEditingPayment({
+                      ...editingPayment,
+                      source: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -364,7 +425,10 @@ export default function AdminPaymentsPage() {
                   type="datetime-local"
                   value={editingPayment.due_date?.slice(0, 16)}
                   onChange={(e) =>
-                    setEditingPayment({ ...editingPayment, due_date: e.target.value })
+                    setEditingPayment({
+                      ...editingPayment,
+                      due_date: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -374,7 +438,10 @@ export default function AdminPaymentsPage() {
                 <Input
                   value={editingPayment.description || ""}
                   onChange={(e) =>
-                    setEditingPayment({ ...editingPayment, description: e.target.value })
+                    setEditingPayment({
+                      ...editingPayment,
+                      description: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -400,26 +467,40 @@ export default function AdminPaymentsPage() {
               type="number"
               placeholder="User ID"
               value={newPayment.user_id}
-              onChange={(e) => setNewPayment({ ...newPayment, user_id: e.target.value })}
+              onChange={(e) =>
+                setNewPayment({ ...newPayment, user_id: e.target.value })
+              }
             />
 
             <Input
               type="number"
               placeholder="Amount"
               value={newPayment.amount}
-              onChange={(e) => setNewPayment({ ...newPayment, amount: e.target.value })}
+              onChange={(e) =>
+                setNewPayment({ ...newPayment, amount: e.target.value })
+              }
             />
 
-            <Select value={newPayment.type} onValueChange={(v) => setNewPayment({ ...newPayment, type: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={newPayment.type}
+              onValueChange={(v) => setNewPayment({ ...newPayment, type: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="income">Income</SelectItem>
                 <SelectItem value="expense">Expense</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={newPayment.status} onValueChange={(v) => setNewPayment({ ...newPayment, status: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={newPayment.status}
+              onValueChange={(v) => setNewPayment({ ...newPayment, status: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
@@ -427,8 +508,13 @@ export default function AdminPaymentsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={newPayment.source} onValueChange={(v) => setNewPayment({ ...newPayment, source: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={newPayment.source}
+              onValueChange={(v) => setNewPayment({ ...newPayment, source: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="bank">Bank</SelectItem>
@@ -438,13 +524,17 @@ export default function AdminPaymentsPage() {
             <Input
               type="datetime-local"
               value={newPayment.due_date}
-              onChange={(e) => setNewPayment({ ...newPayment, due_date: e.target.value })}
+              onChange={(e) =>
+                setNewPayment({ ...newPayment, due_date: e.target.value })
+              }
             />
 
             <Input
               placeholder="Description"
               value={newPayment.description}
-              onChange={(e) => setNewPayment({ ...newPayment, description: e.target.value })}
+              onChange={(e) =>
+                setNewPayment({ ...newPayment, description: e.target.value })
+              }
             />
 
             <Button className="w-full" onClick={createPayment}>
@@ -456,3 +546,67 @@ export default function AdminPaymentsPage() {
     </div>
   );
 }
+
+// Start Update Tony
+function userTooltip(p) {
+  if (!p) return "";
+
+  const user = p.user || {};
+
+  return [
+    `User ID : ${user.id ?? "N/A"}`,
+    `Real User ID : ${user.real_user_id ?? "N/A"}`,
+    `Username : ${user.username ?? "N/A"}`,
+    `Phone Number : ${user.phone_number ?? "N/A"}`,
+    `Email : ${user.email ?? "N/A"}`,
+    `Verified ByAadmin : ${user.verified_by_admin ?? "N/A"}`,
+    `Gender : ${user.gender ?? "N/A"}`,
+    `Birth Date : ${formatDateOnly(user.birth_date ?? "N/A")}`,
+    `City : ${user.city ?? "N/A"}`,
+    `Bio : ${user.bio ?? "N/A"}`,
+    `Role : ${user.role ?? "N/A"}`,
+  ].join("\n");
+}
+
+function paymentTooltip(p) {
+  if (!p) return "";
+
+  return [
+    `User ID : ${p.user_id ?? "N/A"}`,
+    `Name : ${p.name ?? "N/A"}`,
+    `Issue Date : ${formatDateTime(p.issue_date ?? "N/A")}`,
+    `Due Date : ${formatDateTime(p.due_date ?? "N/A")}`,
+    `Reference ID : ${p.reference_id ?? "N/A"}`,
+    `Description : ${p.description ?? "N/A"}`,
+  ].join("\n");
+}
+
+function formatDateOnly(value) {
+  if (!value) return "N/A";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(value) {
+  if (!value) return "N/A";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+
+  return d.toLocaleString("en-US", {
+    timeZone: "Asia/Beirut",
+    month: "numeric",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+// End Update Tony
