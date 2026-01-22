@@ -9,43 +9,98 @@ import BookingsOverviewChart from "@/components/admin/BookingsOverviewChart";
 /* =====================================
    BUILD BOOKINGS CHART DATA
 ===================================== */
-const buildBookingsChartData = (bookings) => {
+const buildBookingsChartData = (bookings, period) => {
   const map = {};
+  const now = new Date();
 
-  bookings.forEach((b) => {
-    if (!b.start_datetime) return;
+  if (period === "week") {
+    // Last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(now.getDate() - i);
+      const label = d.toLocaleDateString("en-US", { weekday: "short" });
 
-    const date = new Date(b.start_datetime);
-    if (isNaN(date.getTime())) return;
-
-    const month = date.toLocaleString("en-US", { month: "short" });
-
-    if (!map[month]) {
-      map[month] = {
-        month,
+      map[label] = {
+        label,
         total: 0,
+        pending: 0,
         completed: 0,
         cancelled: 0,
-        pending: 0,
+        date: d.toDateString(),
       };
     }
 
-    map[month].total += 1;
+    bookings.forEach((b) => {
+      if (!b.start_datetime) return;
 
-    switch (b.booking_request_status) {
-      case "completed":
-        map[month].completed += 1;
-        break;
-      case "cancelled":
-        map[month].cancelled += 1;
-        break;
-      default:
-        map[month].pending += 1;
+      const d = new Date(b.start_datetime);
+      const label = d.toLocaleDateString("en-US", { weekday: "short" });
+
+      if (!map[label]) return;
+
+      map[label].total++;
+      map[label][b.booking_request_status]++;
+    });
+
+    return Object.values(map);
+  }
+
+  if (period === "month") {
+    const months = [
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
+    ];
+
+    months.forEach((m) => {
+      map[m] = {
+        label: m,
+        total: 0,
+        pending: 0,
+        completed: 0,
+        cancelled: 0,
+      };
+    });
+
+    bookings.forEach((b) => {
+      if (!b.start_datetime) return;
+
+      const d = new Date(b.start_datetime);
+      if (d.getFullYear() !== now.getFullYear()) return;
+
+      const month = d.toLocaleString("en-US", { month: "short" });
+
+      map[month].total++;
+      map[month][b.booking_request_status]++;
+    });
+
+    return months.map((m) => map[m]);
+  }
+
+  // YEAR
+  bookings.forEach((b) => {
+    if (!b.start_datetime) return;
+
+    const year = new Date(b.start_datetime).getFullYear();
+
+    if (!map[year]) {
+      map[year] = {
+        label: String(year),
+        total: 0,
+        pending: 0,
+        completed: 0,
+        cancelled: 0,
+      };
     }
+
+    map[year].total++;
+    map[year][b.booking_request_status]++;
   });
 
-  return Object.values(map);
+  return Object.values(map).sort(
+    (a, b) => Number(a.label) - Number(b.label)
+  );
 };
+
 
 
 const AdminDashboard = () => {
@@ -131,28 +186,30 @@ const AdminDashboard = () => {
      FETCH CHART DATA
   ===================================== */
   useEffect(() => {
-    const fetchBookingsChart = async () => {
-      try {
-        setLoadingChart(true);
+  const fetchBookingsChart = async () => {
+    try {
+      setLoadingChart(true);
 
-        const res = await api.get("/admin/bookings");
-        const rawBookings = res?.data?.bookings?.data || [];
+      const res = await api.get("/admin/bookings");
+      const rawBookings = res?.data?.bookings?.data || [];
 
-        const chartReadyData = buildBookingsChartData(rawBookings);
+      const chartReadyData = buildBookingsChartData(
+        rawBookings,
+        chartPeriod
+      );
 
-        console.log("FINAL CHART DATA:", chartReadyData);
+      setChartData(chartReadyData);
+    } catch (err) {
+      console.error("Chart error:", err);
+      setChartData([]);
+    } finally {
+      setLoadingChart(false);
+    }
+  };
 
-        setChartData(chartReadyData);
-      } catch (err) {
-        console.error("Chart error:", err);
-        setChartData([]);
-      } finally {
-        setLoadingChart(false);
-      }
-    };
+  fetchBookingsChart();
+}, [chartPeriod]);
 
-    fetchBookingsChart();
-  }, [chartPeriod]);
 
   /* =====================================
      STAT CARD
