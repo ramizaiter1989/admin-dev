@@ -40,13 +40,7 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
+import { Card } from "@/components/ui/card";
 
 /* ================= CONFIG ================= */
 
@@ -74,9 +68,9 @@ export default function AdminBookingsPage() {
 
   /* ---------- UI ---------- */
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [sortAsc, setSortAsc] = useState(false);
-
+  const [status, setStatus] = useState([]);
+  const [sortBy, setSortBy] = useState("newest");
+  const [paymentStatus, setPaymentStatus] = useState("all");
   /* ---------- VIEW ---------- */
   const [viewOpen, setViewOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -91,18 +85,12 @@ export default function AdminBookingsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
 
-  // Tony Comment do not remove
-  // /* ----------  CALENDER RANGE  ---------- */
-  // const [dateRange, setDateRange] = useState({ from: null, to: null });
-  // End Tony Update
-
   /* ================= FETCH ================= */
 
   const fetchBookings = async () => {
     setLoading(true);
     try {
       const params = { page: 1, per_page: 50 };
-      if (status !== "all") params.status = status;
 
       const { data } = await api.get("/admin/bookings", { params });
       const rows = data.bookings?.data || [];
@@ -133,7 +121,7 @@ export default function AdminBookingsPage() {
 
   useEffect(() => {
     fetchBookings();
-  }, [status]);
+  }, []);
 
   // Start Tony Update - Fetch booking details
   const fetchBookingDetails = async (id) => {
@@ -156,39 +144,86 @@ export default function AdminBookingsPage() {
   const filteredBookings = useMemo(() => {
     let data = [...bookings];
 
-    // Tony Comment do not remove
-    // if (dateRange?.from) {
-    //   const from = new Date(dateRange.from);
-    //   from.setHours(0, 0, 0, 0);
-
-    //   const to = dateRange?.to
-    //     ? new Date(dateRange.to)
-    //     : new Date(dateRange.from);
-    //   to.setHours(23, 59, 59, 999);
-
-    //   data = data.filter((b) => {
-    //     const d = new Date(b.start_datetime);
-    //     if (Number.isNaN(d.getTime())) return false;
-    //     return d >= from && d <= to;
-    //   });
-    // }
-
+    //  search
     if (search) {
-      data = data.filter((b) =>
-        `${b.id} ${clients[b.client_id] ?? ""} ${b.car_id}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
+      const q = search.toLowerCase().trim();
+
+      data = data.filter((b) => {
+        const clientName = (clients[b.client_id] ?? "").toLowerCase();
+
+        const carMake = (b.car?.make ?? "").toLowerCase();
+        const carModel = (b.car?.model ?? "").toLowerCase();
+        const carName = `${carMake} ${carModel}`.trim();
+
+        const agentUsername = (b.car?.agent?.username ?? "").toLowerCase();
+
+        const haystack = [
+          b.id,
+          b.client_id,
+          b.car_id,
+          clientName,
+          carMake,
+          carModel,
+          carName,
+          agentUsername,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return haystack.includes(q);
+      });
+    }
+
+    // status filter
+    if (status.length > 0) {
+      data = data.filter((b) => status.includes(b.booking_request_status));
+    }
+
+    // payment status filter
+    if (paymentStatus !== "all") {
+      data = data.filter(
+        (b) => (b.payment_status ?? "").toLowerCase() === paymentStatus,
       );
     }
 
-    data.sort((a, b) =>
-      sortAsc
-        ? Number(a.total_booking_price) - Number(b.total_booking_price)
-        : Number(b.total_booking_price) - Number(a.total_booking_price),
-    );
+    // sort (dropdown)
+    data.sort((a, b) => {
+      if (sortBy === "newest") {
+        const da = new Date(a.created_at ?? 0).getTime();
+        const db = new Date(b.created_at ?? 0).getTime();
+        if (db !== da) return db - da;
+        return Number(b.id) - Number(a.id);
+      }
+
+      if (sortBy === "client_az" || sortBy === "client_za") {
+        const aName = (clients[a.client_id] ?? "").toLowerCase();
+        const bName = (clients[b.client_id] ?? "").toLowerCase();
+
+        if (aName < bName) return sortBy === "client_az" ? -1 : 1;
+        if (aName > bName) return sortBy === "client_az" ? 1 : -1;
+
+        return Number(b.id) - Number(a.id);
+      }
+
+      if (sortBy === "total_high") {
+        return (
+          Number(b.total_booking_price || 0) -
+          Number(a.total_booking_price || 0)
+        );
+      }
+
+      if (sortBy === "total_low") {
+        return (
+          Number(a.total_booking_price || 0) -
+          Number(b.total_booking_price || 0)
+        );
+      }
+
+      return 0;
+    });
 
     return data;
-  }, [bookings, search, sortAsc, clients]);
+  }, [bookings, search, clients, status, paymentStatus, sortBy]);
 
   const totalBookingsAmount = useMemo(() => {
     return filteredBookings.reduce(
@@ -196,6 +231,23 @@ export default function AdminBookingsPage() {
       0,
     );
   }, [filteredBookings]);
+
+  const statusCounts = useMemo(() => {
+    const counts = {
+      pending: 0,
+      confirmed: 0,
+      cancelled: 0,
+      completed: 0,
+      rejected: 0,
+    };
+
+    for (const b of bookings) {
+      const st = (b.booking_request_status ?? "").toLowerCase();
+      if (counts[st] !== undefined) counts[st] += 1;
+    }
+
+    return counts;
+  }, [bookings]);
 
   /* ================= ACTIONS ================= */
 
@@ -266,91 +318,99 @@ export default function AdminBookingsPage() {
         <h1 className="text-xl font-semibold">Bookings</h1>
 
         <div className="flex items-center gap-3">
-          {/* Tony Comment please do not delete it  */}
-          {/* <Input
-            placeholder="Search…"
-            className="h-8 w-44 text-xs"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          /> */}
-          {/* <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-8 text-xs gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange?.to ? (
-                    <>
-                      {format(dateRange.from, "yyyy-MM-dd")} →{" "}
-                      {format(dateRange.to, "yyyy-MM-dd")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "yyyy-MM-dd")
-                  )
-                ) : (
-                  "Date range"
-                )}
-              </Button>
-            </PopoverTrigger>
-
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                numberOfMonths={1}
-                selected={dateRange}
-                onSelect={setDateRange}
-              />
-
-              <div className="p-2 flex justify-end gap-2 border-t">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDateRange({ from: null, to: null })}
-                >
-                  Clear
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover> */}
-
           <div className="px-3 py-1.5 rounded-lg border bg-muted text-sm font-semibold">
-            Total: ${totalBookingsAmount.toLocaleString()}
+            <p>Total Bookings : {filteredBookings.length} </p>
+            <p>Total : ${totalBookingsAmount.toLocaleString()}</p>
           </div>
 
           <Input
-            placeholder="Search…"
+            placeholder="Search client / car / agent  "
             className="h-8 w-44 text-xs"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-8 w-32 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Status</div>
+
+            <div className="flex flex-wrap gap-4">
               {[
-                "all",
                 "pending",
                 "confirmed",
                 "cancelled",
                 "completed",
                 "rejected",
-              ].map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              ].map((st) => {
+                const checked = status.includes(st);
 
-          <Button
-            size="icon"
-            variant="ghost"
-            aria-label="Sort"
-            onClick={() => setSortAsc(!sortAsc)}
-          >
-            <ArrowUpDown size={16} />
-          </Button>
+                return (
+                  <label
+                    key={st}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setStatus((prev) =>
+                          isChecked
+                            ? [...prev, st]
+                            : prev.filter((x) => x !== st),
+                        );
+                      }}
+                    />
+                    <span className="capitalize flex items-center gap-2">
+                      {st}
+                      <span className="inline-flex items-center justify-center h-5 min-w-6 px-2 rounded-full text-[11px] font-semibold bg-muted text-foreground">
+                        {statusCounts?.[st] ?? 0}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {status.length > 0 && (
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted-foreground underline"
+                onClick={() => setStatus([])}
+              >
+                Clear status filter
+              </button>
+            )}
+          </Card>
+
+          <div className="w-44">
+            <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Payment status" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">All Payments</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-44">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="client_az">Client A - Z</SelectItem>
+                <SelectItem value="client_za">Client Z - A</SelectItem>
+                <SelectItem value="total_high">Total High → Low</SelectItem>
+                <SelectItem value="total_low">Total Low → High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <Button
             size="icon"
@@ -496,6 +556,7 @@ export default function AdminBookingsPage() {
                       size="icon"
                       variant="ghost"
                       aria-label="Force complete"
+                      title="Confirmed"
                       onClick={() => forceComplete(b.id)}
                     >
                       <CheckCircle2 size={16} className="text-green-600" />
