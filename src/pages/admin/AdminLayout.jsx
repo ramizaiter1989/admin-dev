@@ -47,11 +47,25 @@ export const AdminLayout = () => {
         <NavLink to="/admin/announcements" className={linkClass}>
           Announcements
         </NavLink>
+
         <NavLink to="/admin/appeals" className={linkClass}>
           Appeals
         </NavLink>
+
         <NavLink to="/admin/holidays" className={linkClass}>
           Holidays
+        </NavLink>
+
+        <NavLink to="/admin/suggestions" className={linkClass}>
+          Suggestions
+        </NavLink>
+        
+        <NavLink to="/admin/notifications" className={linkClass}>
+          Notifications
+        </NavLink>
+
+        <NavLink to="/admin/otps" className={linkClass}>
+          OTPs
         </NavLink>
       </aside>
 

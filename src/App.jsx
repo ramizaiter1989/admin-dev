@@ -23,7 +23,9 @@ import AdminBookingsPage from "@/pages/admin/AdminBookingsPage";
 import AdminAnnouncementsPage from "@/pages/admin/AdminAnnouncementsPage";
 import AdminAppealsPage from "@/pages/admin/AdminAppealsPage";
 import AdminHolidaysPage from "@/pages/admin/AdminHolidaysPage";
-
+import AdminSuggestionsPage from "@/pages/admin/AdminSuggestionsPage";
+import AdminOtpsPage from "./pages/admin/AdminOtpsPage";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
 /* ============================
    Route Guards
 ============================ */
@@ -94,6 +96,9 @@ function App() {
             <Route path="announcements" element={<AdminAnnouncementsPage />} />
             <Route path="appeals" element={<AdminAppealsPage />} />
             <Route path="holidays" element={<AdminHolidaysPage />} />
+            <Route path="suggestions" element={<AdminSuggestionsPage />} />
+            <Route path="notifications" element={<AdminNotificationsPage />} />
+            <Route path="otps" element={<AdminOtpsPage />} />
           </Route>
 
           {/* Redirects */}
