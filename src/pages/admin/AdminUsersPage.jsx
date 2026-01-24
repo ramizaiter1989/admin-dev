@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/axios";
-import { Eye, Pencil, Trash2, Search } from "lucide-react";
+import { Eye, Pencil, Trash2, Search, Edit, Users } from "lucide-react";
 
 import {
   Table,
@@ -33,6 +33,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { Label } from "@/components/ui/label";
+
 function truncate(text, max = 14) {
   if (!text) return "N/A";
   return text.length > max ? `${text.slice(0, max)}...` : text;
@@ -52,12 +54,14 @@ const AdminUsersPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
 
+  const [editingUser, setEditingUser] = useState(null);
   //End tony update
 
   /* filters */
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState("all");
+  const [roles, setRoles] = useState([]);
   const [sort, setSort] = useState("newest");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   /* ============================
      Fetch users
@@ -131,9 +135,15 @@ const AdminUsersPage = () => {
       );
     }
 
-    // role filter
-    if (role !== "all") {
-      data = data.filter((u) => u.role === role);
+    // role filter (multi)
+    if (roles.length > 0) {
+      data = data.filter((u) => roles.includes(u.role));
+    }
+
+    // status filter
+    if (statusFilter !== "all") {
+      const isActive = statusFilter === "active";
+      data = data.filter((u) => !!u.update_access === isActive);
     }
 
     // sort
@@ -148,14 +158,11 @@ const AdminUsersPage = () => {
     }
 
     return data;
-  }, [users, search, role, sort]);
+  }, [users, search, roles, statusFilter, sort]);
 
   /* ============================
      Actions
   ============================ */
-  const handleViewUser = (user) => {
-    navigate(`/admin/users/${user.id}`);
-  };
 
   const handleDeleteUser = async (id) => {
     if (!confirm("Delete this user?")) return;
@@ -182,14 +189,34 @@ const AdminUsersPage = () => {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
+            <DialogTitle>
+              {modalType === "edit-user" ? "Edit User" : "User Details"}
+            </DialogTitle>
           </DialogHeader>
 
           {modalType === "view-user" && selectedItem && (
             <UserDetailsView
               user={selectedItem}
-              onEdit={() => setModalType("edit-user")}
+              onEdit={() => {
+                setEditingUser({ ...selectedItem });
+                setModalType("edit-user");
+              }}
               onClose={() => setModalOpen(false)}
+            />
+          )}
+          {modalType === "edit-user" && editingUser && (
+            <EditUserView
+              user={editingUser}
+              setUser={setEditingUser}
+              onClose={() => {
+                setModalOpen(false);
+                setModalType("view-user");
+              }}
+              onSaved={(updated) => {
+                setSelectedItem(updated);
+                setEditingUser({ ...updated });
+                setModalType("view-user");
+              }}
             />
           )}
         </DialogContent>
@@ -198,10 +225,6 @@ const AdminUsersPage = () => {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Users</h1>
-
-        <Badge variant="secondary" className="text-sm">
-          Total users: {total}
-        </Badge>
       </div>
 
       {/* FILTER BAR */}
@@ -218,19 +241,6 @@ const AdminUsersPage = () => {
             />
           </div>
 
-          {/* Role */}
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger>
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All roles</SelectItem>
-              <SelectItem value="client">Client</SelectItem>
-              <SelectItem value="agency">Agency</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* Sort */}
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger>
@@ -242,6 +252,74 @@ const AdminUsersPage = () => {
               <SelectItem value="za">Z–A</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Status */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="all">All status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="blocked">Blocked</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Roles (Checklist) */}
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Roles</div>
+
+            <div className="flex flex-wrap gap-4">
+              {["client", "agency", "admin"].map((r) => {
+                const checked = roles.includes(r);
+
+                return (
+                  <label
+                    key={r}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setRoles((prev) =>
+                          isChecked
+                            ? [...prev, r]
+                            : prev.filter((x) => x !== r),
+                        );
+                      }}
+                    />
+                    <span className="capitalize">{r}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {roles.length > 0 && (
+              <button
+                type="button"
+                className="mt-2 text-xs text-muted-foreground underline"
+                onClick={() => setRoles([])}
+              >
+                Clear role filter
+              </button>
+            )}
+          </Card>
+
+          <Card className="border-muted/60">
+            <CardContent className="p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>Total users</span>
+              </div>
+
+              <div className="text-lg font-semibold tabular-nums">
+                {filteredUsers.length}
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 
@@ -268,7 +346,7 @@ const AdminUsersPage = () => {
                     <TableCell className="font-medium">
                       {/* Start Tony Update  */}
                       <span
-                        className="user-name-hover inline-flex items-center gap-2 cursor-pointer"
+                        className="item-name-hover inline-flex items-center gap-2 cursor-pointer"
                         title={userTooltip(user)}
                         role="button"
                         tabIndex={0}
@@ -335,11 +413,29 @@ const AdminUsersPage = () => {
                         </Button>
 
                         <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={async () => {
+                            const fullDetails = await fetchUserDetails(user.id);
+                            if (fullDetails) {
+                              setSelectedItem(fullDetails);
+                              setEditingUser({ ...fullDetails });
+                              setModalType("edit-user");
+                              setModalOpen(true);
+                            }
+                          }}
+                          title="Edit User"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+
+                        <Button
                           size="icon"
                           variant="ghost"
                           aria-label="Delete user"
                           className="text-red-500"
                           onClick={() => handleDeleteUser(user.id)}
+                          title="Remove User"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -376,16 +472,16 @@ function userTooltip(user) {
   const qc = client.qualification_code || {};
 
   return [
-    `User ID: ${user.id ?? "N/A"}`,
-    `Age: ${qc.age ?? "N/A"}`,
-    `Gender: ${user.gender ?? "N/A"}`,
-    `City: ${user.city ?? "N/A"}`,
-    `Bio: ${user.bio ?? "N/A"}`,
-    `Profession: ${client.profession ?? "N/A"}`,
-    `Email: ${user.email ?? "N/A"}`,
-    `License number: ${client.license_number ?? "N/A"}`,
-    `Average rating: ${client.average_rating ?? "N/A"}`,
-    `OTP verification: ${user.otp_verification ?? "N/A"}`,
+    `User ID : ${user.id ?? "N/A"}`,
+    `Age : ${qc.age ?? "N/A"}`,
+    `Gender : ${user.gender ?? "N/A"}`,
+    `City : ${user.city ?? "N/A"}`,
+    `Bio : ${user.bio ?? "N/A"}`,
+    `Profession : ${client.profession ?? "N/A"}`,
+    `Email : ${user.email ?? "N/A"}`,
+    `License number : ${client.license_number ?? "N/A"}`,
+    `Average rating : ${client.average_rating ?? "N/A"}`,
+    `OTP verification : ${user.otp_verification ?? "N/A"}`,
   ].join("\n");
 }
 
@@ -403,6 +499,7 @@ export async function openUserView(
     setModalOpen(true);
   }
 }
+
 function formatDateOnly(value) {
   if (!value) return "N/A";
   const d = new Date(value);
@@ -440,16 +537,58 @@ function fileUrl(path, fallback = null) {
   return ASSET_BASE + cleaned;
 }
 
+function isPdf(pathOrUrl) {
+  if (!pathOrUrl) return false;
+  return String(pathOrUrl).toLowerCase().split("?")[0].endsWith(".pdf");
+}
+
+function DocCard({ title, path, fallback = null }) {
+  const url = fileUrl(path, fallback);
+
+  if (!url) {
+    return <div className="text-sm text-muted-foreground">N/A</div>;
+  }
+
+  // If PDF → show PDF inside the card
+  if (isPdf(url)) {
+    const pdfUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
+    return (
+      <iframe
+        title={title}
+        src={pdfUrl}
+        className="w-full max-w-[260px] h-[180px] rounded-md border bg-white"
+      />
+    );
+  }
+
+  // If Image → show thumbnail
+  return (
+    <img
+      src={url}
+      alt={title}
+      className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
+      onError={(e) => {
+        if (fallback) {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = fallback;
+        }
+      }}
+    />
+  );
+}
+
 function UserDetailsView({ user, onEdit, onClose }) {
   const client = user?.client || {};
-  const qc = client?.qualification_code || {};
 
-  const Field = ({ label, value }) => (
-    <div className="py-1">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-sm font-medium break-words">{value ?? "N/A"}</div>
-    </div>
-  );
+  function FieldRow({ label, value }) {
+    return (
+      <div className="flex items-center gap-2 test-sm">
+        <span className="text-muted-foreground">{label} :</span>
+        <span className="text-foreground">{value ?? "N/A"}</span>
+      </div>
+    );
+  }
+  // End Update Tony
 
   const Chip = ({ label, value, tone = "neutral" }) => {
     const cls =
@@ -461,7 +600,7 @@ function UserDetailsView({ user, onEdit, onClose }) {
 
     return (
       <div className="flex items-center gap-2 whitespace-nowrap">
-        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className=" text-muted-foreground">{label}</span>
 
         <span
           className={`inline-flex items-center justify-center px-2 h-5 rounded text-xs font-semibold leading-none ${cls}`}
@@ -477,20 +616,20 @@ function UserDetailsView({ user, onEdit, onClose }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-        <Field label="ID" value={user?.id} />
-        <Field label="Username" value={user?.username} />
+        <FieldRow label="ID" value={user?.id} />
+        <FieldRow label="Username" value={user?.username} />
 
-        <Field label="Email" value={user?.email} />
-        <Field label="Phone Number" value={user?.phone_number} />
+        <FieldRow label="Email" value={user?.email} />
+        <FieldRow label="Phone Number" value={user?.phone_number} />
 
-        <Field label="First Name" value={user?.first_name} />
-        <Field label="Last Name" value={user?.last_name} />
+        <FieldRow label="First Name" value={user?.first_name} />
+        <FieldRow label="Last Name" value={user?.last_name} />
 
-        <Field label="Gender" value={user?.gender} />
-        <Field label="Birth Date" value={formatDateOnly(user?.birth_date)} />
+        <FieldRow label="Gender" value={user?.gender} />
+        <FieldRow label="Birth Date" value={formatDateOnly(user?.birth_date)} />
 
-        <Field label="City" value={user?.city} />
-        <Field label="Role" value={user?.role} />
+        <FieldRow label="City" value={user?.city} />
+        <FieldRow label="Role" value={user?.role} />
 
         <div className="flex flex-wrap items-center gap-8 pt-1">
           <Chip
@@ -516,13 +655,12 @@ function UserDetailsView({ user, onEdit, onClose }) {
           />
         </div>
 
-        <Field label="Created At" value={formatDateTime(user?.created_at)} />
-        <Field label="Updated At" value={formatDateTime(user?.updated_at)} />
+        <FieldRow label="Created At" value={formatDateTime(user?.created_at)} />
+        <FieldRow label="Updated At" value={formatDateTime(user?.updated_at)} />
       </div>
 
       <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-        <Field label="Bio" value={user?.bio} />
-        <Field label="" value="" />
+        <FieldRow label="Bio" value={user?.bio} />
       </div>
 
       <div className="border-t pt-3" />
@@ -530,105 +668,45 @@ function UserDetailsView({ user, onEdit, onClose }) {
       <div className="text-sm font-semibold">Client Details</div>
 
       <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-        <Field label="License Number" value={client?.license_number} />
-        <Field label="Profession" value={client?.profession} />
+        <FieldRow label="License Number" value={client?.license_number} />
+        <FieldRow label="Profession" value={client?.profession} />
 
-        <Field label="Average Salary" value={client?.avg_salary} />
-        <Field label="Promo Code" value={client?.promo_code} />
+        <FieldRow label="Average Salary" value={client?.avg_salary} />
+        <FieldRow label="Promo Code" value={client?.promo_code} />
       </div>
 
       <div className="border-t pt-3" />
 
-      <div className="border-t pt-4 space-y-3">
+      <div className="space-y-3">
         <div className="text-sm font-semibold">Documents</div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Profile Picture */}
           <div>
-            <div className="text-xs text-muted-foreground mb-2">
-              Profile Picture
-            </div>
-            <a
-              href={fileUrl(user?.profile_picture, DEFAULT_AVATAR)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <img
-                src={fileUrl(user?.profile_picture, DEFAULT_AVATAR)}
-                alt="Profile"
-                className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = DEFAULT_AVATAR;
-                }}
-              />
-            </a>
+            <div className="text-muted-foreground">Profile Picture</div>
+            <DocCard
+              title="Profile Picture"
+              path={user?.profile_picture}
+              fallback={DEFAULT_AVATAR}
+            />
           </div>
 
-          {/* Driver License  */}
+          {/* Driver License */}
           <div>
-            <div className="text-xs text-muted-foreground mb-2">
-              Driver License
-            </div>
-            {client?.driver_license ? (
-              <a
-                href={fileUrl(client?.driver_license)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <img
-                  src={fileUrl(client?.driver_license)}
-                  alt="Driver License"
-                  className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                />
-              </a>
-            ) : (
-              <div className="text-sm text-muted-foreground">N/A</div>
-            )}
+            <div className="text-muted-foreground">Driver License</div>
+            <DocCard title="Driver License" path={client?.driver_license} />
           </div>
 
           {/* ID Card Front */}
           <div>
-            <div className="text-xs text-muted-foreground mb-2">
-              ID Card Front
-            </div>
-            {user?.id_card_front ? (
-              <a
-                href={fileUrl(user?.id_card_front)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <img
-                  src={fileUrl(user?.id_card_front)}
-                  alt="ID Card Front"
-                  className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                />
-              </a>
-            ) : (
-              <div className="text-sm text-muted-foreground">N/A</div>
-            )}
+            <div className="text-muted-foreground">ID Card Front</div>
+            <DocCard title="ID Card Front" path={user?.id_card_front} />
           </div>
 
           {/* ID Card Back */}
           <div>
-            <div className="text-xs text-muted-foreground mb-2">
-              ID Card Back
-            </div>
-            {user?.id_card_back ? (
-              <a
-                href={fileUrl(user?.id_card_back)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <img
-                  src={fileUrl(user?.id_card_back)}
-                  alt="ID Card Back"
-                  className="w-full max-w-[260px] h-[180px] object-cover rounded-md border"
-                />
-              </a>
-            ) : (
-              <div className="text-sm text-muted-foreground">N/A</div>
-            )}
+            <div className="text-muted-foreground">ID Card Back</div>
+            <DocCard title="ID Card Back" path={user?.id_card_back} />
           </div>
         </div>
       </div>
@@ -640,6 +718,205 @@ function UserDetailsView({ user, onEdit, onClose }) {
 
         <Button variant="outline" className="w-28" onClick={onClose}>
           Close
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function EditUserView({ user, setUser, onClose, onSaved }) {
+  const { toast } = useToast();
+
+  const setVal = (key, value) => setUser((p) => ({ ...p, [key]: value }));
+
+  const client = user?.client || {};
+
+  const save = async () => {
+    try {
+      const payload = {
+        verified_by_admin: !!user?.verified_by_admin,
+        status: !!user?.status,
+        is_locked: !!user?.is_locked,
+        update_access: !!user?.update_access,
+      };
+
+      const { data } = await api.put(`/admin/users/${user.id}`, payload);
+
+      const updated = data.user ?? data.data ?? user;
+
+      toast({ title: "Saved", description: "User updated successfully" });
+      onSaved?.(updated);
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to update user",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const ToggleRow = ({ label, value, onChange }) => (
+    <div className="flex items-center justify-between gap-3 py-2">
+      <div className="text-sm">{label}</div>
+
+      <button
+        type="button"
+        role="switch"
+        aria-checked={!!value}
+        onClick={() => onChange(!value)}
+        className={[
+          "relative inline-flex h-5 w-10 items-center rounded-full transition-colors",
+          value ? "bg-teal-600" : "bg-muted",
+          "focus:outline-none focus:ring-2 focus:ring-teal-500/40",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+            value ? "translate-x-5" : "translate-x-1",
+            "shadow",
+          ].join(" ")}
+        />
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+        <div>
+          <Label>ID</Label>
+          <Input value={user?.id ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Username</Label>
+          <Input value={user?.username ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Email</Label>
+          <Input value={user?.email ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Phone Number</Label>
+          <Input value={user?.phone_number ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>First Name</Label>
+          <Input value={user?.first_name ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Last Name</Label>
+          <Input value={user?.last_name ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Gender</Label>
+          <Input value={user?.gender ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Birth Date</Label>
+          <Input value={formatDateOnly(user?.birth_date)} disabled />
+        </div>
+
+        <div>
+          <Label>City</Label>
+          <Input value={user?.city ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Role</Label>
+          <Input value={user?.role ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Created At</Label>
+          <Input value={formatDateTime(user?.created_at)} disabled />
+        </div>
+
+        <div>
+          <Label>Updated At</Label>
+          <Input value={formatDateTime(user?.updated_at)} disabled />
+        </div>
+
+        <div className="col-span-2">
+          <Label>Bio</Label>
+          <textarea
+            className="w-full border rounded-md p-2 min-h-[90px]"
+            value={user?.bio ?? ""}
+            disabled
+          />
+        </div>
+      </div>
+
+      <div className="border-t pt-3" />
+
+      <div className="text-sm font-semibold">Client Details (Read-only)</div>
+
+      <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+        <div>
+          <Label>License Number</Label>
+          <Input value={client?.license_number ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Profession</Label>
+          <Input value={client?.profession ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Average Salary</Label>
+          <Input value={client?.avg_salary ?? ""} disabled />
+        </div>
+
+        <div>
+          <Label>Promo Code</Label>
+          <Input value={client?.promo_code ?? ""} disabled />
+        </div>
+      </div>
+
+      <div className="border-t pt-3" />
+
+      <div className="text-sm font-semibold">Editable Fields</div>
+
+      <div className="rounded-md border p-3 space-y-1">
+        <ToggleRow
+          label="Verified by Admin"
+          value={user?.verified_by_admin}
+          onChange={(v) => setVal("verified_by_admin", v)}
+        />
+
+        <ToggleRow
+          label="Status (Active)"
+          value={user?.status}
+          onChange={(v) => setVal("status", v)}
+        />
+
+        <ToggleRow
+          label="Is Locked"
+          value={user?.is_locked}
+          onChange={(v) => setVal("is_locked", v)}
+        />
+
+        <ToggleRow
+          label="Update Access Allow Profile Updates"
+          value={user?.update_access}
+          onChange={(v) => setVal("update_access", v)}
+        />
+      </div>
+
+      <div className="pt-3 flex gap-2 justify-end">
+        <Button className="w-36" onClick={save}>
+          Update User
+        </Button>
+
+        <Button variant="outline" className="w-28" onClick={onClose}>
+          Cancel
         </Button>
       </div>
     </div>
