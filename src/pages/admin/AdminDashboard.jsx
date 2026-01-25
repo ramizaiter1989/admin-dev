@@ -93,8 +93,8 @@ const buildBookingsChartData = (bookings, period, dateRange) => {
   ========================== */
   if (period === "month") {
     const months = [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
 
     months.forEach((m) => {
@@ -278,82 +278,82 @@ const AdminDashboard = () => {
 
       {/* BOOKING OVERVIEW */}
       <Card>
-  <CardContent className="p-6 space-y-4">
-    <div className="flex flex-wrap items-start justify-between gap-4">
-  <h2 className="text-lg font-semibold">Booking Overview</h2>
+        <CardContent className="p-6 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h2 className="text-lg font-semibold">Booking Overview</h2>
 
-  {/* Controls */}
-  <div className="flex flex-col gap-3 min-w-[160px]">
-    {/* Period selector */}
-    <select
-      value={chartPeriod}
-      onChange={(e) => setChartPeriod(e.target.value)}
-      className="border rounded-md px-3 py-1 text-sm bg-background"
-    >
-      <option value="day">Daily</option>
-      <option value="week">Week</option>
-      <option value="month">Month</option>
-      <option value="year">Year</option>
-    </select>
+            {/* Controls */}
+            <div className="flex flex-col gap-3 min-w-[160px]">
+              {/* Period selector */}
+              <select
+                value={chartPeriod}
+                onChange={(e) => setChartPeriod(e.target.value)}
+                className="border rounded-md px-3 py-1 text-sm bg-background"
+              >
+                <option value="day">Daily</option>
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+              </select>
 
-    {/* Date range (stacked under selector) */}
-    {chartPeriod === "day" && (
-      <div className="flex flex-col gap-2">
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">
-            From
-          </label>
-          <input
-            type="date"
-            value={formatDate(dateRange.from)}
-            onChange={(e) =>
-              setDateRange((p) => ({
-                ...p,
-                from: new Date(e.target.value),
-              }))
-            }
-            className="border rounded-md px-2 py-1 text-sm w-full"
-          />
-        </div>
+              {/* Date range (stacked under selector) */}
+              {chartPeriod === "day" && (
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      From
+                    </label>
+                    <input
+                      type="date"
+                      value={formatDate(dateRange.from)}
+                      onChange={(e) =>
+                        setDateRange((p) => ({
+                          ...p,
+                          from: new Date(e.target.value),
+                        }))
+                      }
+                      className="border rounded-md px-2 py-1 text-sm w-full"
+                    />
+                  </div>
 
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">
-            To
-          </label>
-          <input
-            type="date"
-            value={formatDate(dateRange.to)}
-            onChange={(e) =>
-              setDateRange((p) => ({
-                ...p,
-                to: new Date(e.target.value),
-              }))
-            }
-            className="border rounded-md px-2 py-1 text-sm w-full"
-          />
-        </div>
-      </div>
-    )}
-  </div>
-</div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      To
+                    </label>
+                    <input
+                      type="date"
+                      value={formatDate(dateRange.to)}
+                      onChange={(e) =>
+                        setDateRange((p) => ({
+                          ...p,
+                          to: new Date(e.target.value),
+                        }))
+                      }
+                      className="border rounded-md px-2 py-1 text-sm w-full"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
 
-    {/* Chart */}
-    <div className="w-full h-[320px]">
-      {loadingChart ? (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          Loading chart data...
-        </div>
-      ) : chartData.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          No booking data
-        </div>
-      ) : (
-        <BookingsOverviewChart data={chartData} />
-      )}
-    </div>
-  </CardContent>
-</Card>
+          {/* Chart */}
+          <div className="w-full h-[320px]">
+            {loadingChart ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Loading chart data...
+              </div>
+            ) : chartData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                No booking data
+              </div>
+            ) : (
+              <BookingsOverviewChart data={chartData} />
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

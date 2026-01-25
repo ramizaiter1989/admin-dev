@@ -57,27 +57,27 @@ export default function AdminAppealsPage() {
         />
 
         <Select
-  value={filters.status || "all"}
-  onValueChange={(v) =>
-    setFilters({
-      ...filters,
-      status: v === "all" ? "" : v,
-      page: 1,
-    })
-  }
->
-  <SelectTrigger className="w-36">
-    <SelectValue placeholder="Status" />
-  </SelectTrigger>
+          value={filters.status || "all"}
+          onValueChange={(v) =>
+            setFilters({
+              ...filters,
+              status: v === "all" ? "" : v,
+              page: 1,
+            })
+          }
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
 
-  <SelectContent>
-    <SelectItem value="all">All</SelectItem>
-    <SelectItem value="submitted">Submitted</SelectItem>
-    <SelectItem value="under_review">Under Review</SelectItem>
-    <SelectItem value="resolved">Resolved</SelectItem>
-    <SelectItem value="rejected">Rejected</SelectItem>
-  </SelectContent>
-</Select>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="submitted">Submitted</SelectItem>
+            <SelectItem value="under_review">Under Review</SelectItem>
+            <SelectItem value="resolved">Resolved</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
 
 
         <Button variant="outline" onClick={refresh}>

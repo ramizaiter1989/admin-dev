@@ -12,16 +12,16 @@ const BookingsOverviewChart = ({ data }) => {
 
   return (
     <LineChart width={900} height={320} data={data}>
-  <XAxis dataKey="label" />
-  <YAxis allowDecimals={false} />
-  <Tooltip />
-  <Legend />
+      <XAxis dataKey="label" />
+      <YAxis allowDecimals={false} />
+      <Tooltip />
+      <Legend />
 
-  <Line dataKey="pending" stroke="#facc15" />
-  <Line dataKey="completed" stroke="#22c55e" />
-  <Line dataKey="cancelled" stroke="#ef4444" />
-  <Line dataKey="total" stroke="#3b82f6" />
-</LineChart>
+      <Line dataKey="pending" stroke="#facc15" />
+      <Line dataKey="completed" stroke="#22c55e" />
+      <Line dataKey="cancelled" stroke="#ef4444" />
+      <Line dataKey="total" stroke="#3b82f6" />
+    </LineChart>
   );
 };
 

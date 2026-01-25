@@ -153,7 +153,7 @@ export const AdminLayout = () => {
                     <div>
                       <p className="text-sm font-semibold">Abbas Nemer</p>
                       <p className="text-xs text-muted-foreground">
-                        Product Manager
+                        Lead Developer 
                       </p>
                     </div>
                   )}

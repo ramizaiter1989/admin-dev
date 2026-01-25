@@ -62,6 +62,7 @@ const AdminUsersPage = () => {
   const [roles, setRoles] = useState([]);
   const [sort, setSort] = useState("newest");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   /* ============================
      Fetch users
@@ -228,100 +229,89 @@ const AdminUsersPage = () => {
       </div>
 
       {/* FILTER BAR */}
-      <Card>
-        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search user..."
-              className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      {/* TOP BAR */}
+<div className="flex flex-wrap items-center justify-between gap-3">
+  {/* Left: Search */}
+  <div className="relative w-full sm:w-72">
+    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+    <Input
+      placeholder="Search user..."
+      className="pl-9"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+  </div>
+  
 
-          {/* Sort */}
-          <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="az">A–Z</SelectItem>
-              <SelectItem value="za">Z–A</SelectItem>
-            </SelectContent>
-          </Select>
+  {/* Right actions */}
+  <div className="flex items-center gap-3">
+    {/* Total users */}
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Users className="h-4 w-4" />
+      <span>Total:</span>
+      <span className="font-semibold text-foreground">
+        {filteredUsers.length}
+      </span>
+    </div>
 
-          {/* Status */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
+    {/* Toggle filters */}
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setShowFilters((p) => !p)}
+    >
+      Filters
+    </Button>
+  </div>
+</div>
 
-            <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="blocked">Blocked</SelectItem>
-            </SelectContent>
-          </Select>
+{showFilters && (
+  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border p-4 bg-background">
+    {/* Sort */}
+    <Select value={sort} onValueChange={setSort}>
+      <SelectTrigger>
+        <SelectValue placeholder="Sort by" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="newest">Newest</SelectItem>
+        <SelectItem value="az">A–Z</SelectItem>
+        <SelectItem value="za">Z–A</SelectItem>
+      </SelectContent>
+    </Select>
 
-          {/* Roles (Checklist) */}
-          <Card className="p-3">
-            <div className="text-sm font-medium mb-2">Roles</div>
+    {/* Status */}
+    <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <SelectTrigger>
+        <SelectValue placeholder="Status" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All</SelectItem>
+        <SelectItem value="active">Active</SelectItem>
+        <SelectItem value="blocked">Blocked</SelectItem>
+      </SelectContent>
+    </Select>
 
-            <div className="flex flex-wrap gap-4">
-              {["client", "agency", "admin"].map((r) => {
-                const checked = roles.includes(r);
+    {/* Roles */}
+    <div className="flex flex-wrap gap-3 text-sm">
+      {["client", "agency", "admin"].map((r) => (
+        <label key={r} className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={roles.includes(r)}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setRoles((prev) =>
+                checked ? [...prev, r] : prev.filter((x) => x !== r)
+              );
+            }}
+          />
+          <span className="capitalize">{r}</span>
+        </label>
+      ))}
+    </div>
+  </div>
+)}
 
-                return (
-                  <label
-                    key={r}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        setRoles((prev) =>
-                          isChecked
-                            ? [...prev, r]
-                            : prev.filter((x) => x !== r),
-                        );
-                      }}
-                    />
-                    <span className="capitalize">{r}</span>
-                  </label>
-                );
-              })}
-            </div>
-
-            {roles.length > 0 && (
-              <button
-                type="button"
-                className="mt-2 text-xs text-muted-foreground underline"
-                onClick={() => setRoles([])}
-              >
-                Clear role filter
-              </button>
-            )}
-          </Card>
-
-          <Card className="border-muted/60">
-            <CardContent className="p-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>Total users</span>
-              </div>
-
-              <div className="text-lg font-semibold tabular-nums">
-                {filteredUsers.length}
-              </div>
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Card>
 
       {/* TABLE */}
       <Card>

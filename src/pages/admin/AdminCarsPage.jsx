@@ -42,6 +42,7 @@ const AdminCarsPage = () => {
   const [categories, setCategories] = useState([]);
   const [status, setStatus] = useState([]);
   const [sort, setSort] = useState("newest");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Start Tony Update
   // Modal states
@@ -266,218 +267,131 @@ const AdminCarsPage = () => {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-5 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search car / agent / plate..."
-              className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      {/* FILTER BAR (compact) */}
+      {/* FILTER BAR (compact) */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Search */}
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search car / agent / plate..."
+            className="pl-9 h-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Car className="h-4 w-4" />
+            <span className="font-semibold text-foreground">
+              {filteredCars.length}
+            </span>
+            <span>cars</span>
           </div>
 
-          {/* Sort */}
-          <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="price">Price (low → high)</SelectItem>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters((p) => !p)}
+          >
+            Filters
+          </Button>
+        </div>
+      </div>
 
-              <SelectItem value="year_asc">Model Year (low → high)</SelectItem>
-              <SelectItem value="year_desc">Model Year (high → low)</SelectItem>
+      {/* ADVANCED FILTERS */}
+      {showFilters && (
+        <div className="mt-3 rounded-lg border bg-background p-3">
+          <div className="flex flex-wrap gap-3 items-end">
 
-              <SelectItem value="views_asc">Views (low → high)</SelectItem>
-              <SelectItem value="views_desc">Views (high → low)</SelectItem>
-            </SelectContent>
-          </Select>
+            {/* Sort */}
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="h-9 w-[180px]">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="price">Price ↑</SelectItem>
+                <SelectItem value="year_asc">Year ↑</SelectItem>
+                <SelectItem value="year_desc">Year ↓</SelectItem>
+                <SelectItem value="views_asc">Views ↑</SelectItem>
+                <SelectItem value="views_desc">Views ↓</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {/* Categories */}
-          <Card className="p-3">
-            <div className="text-sm font-medium mb-2">Categories</div>
-            <div className="flex flex-wrap gap-4">
-              {["normal", "luxury", "sport"].map((cat) => {
-                const checked = categories.includes(cat);
-                return (
-                  <label
-                    key={cat}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        setCategories((prev) =>
-                          isChecked
-                            ? [...prev, cat]
-                            : prev.filter((x) => x !== cat),
-                        );
-                      }}
-                    />
-                    <span className="capitalize">{cat}</span>
-                  </label>
-                );
-              })}
-            </div>
+            {/* Category */}
+            <Select
+              value={categories[0] ?? "all"}
+              onValueChange={(v) =>
+                v === "all" ? setCategories([]) : setCategories([v])
+              }
+            >
+              <SelectTrigger className="h-9 w-[160px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="luxury">Luxury</SelectItem>
+                <SelectItem value="sport">Sport</SelectItem>
+              </SelectContent>
+            </Select>
 
-            {categories.length > 0 && (
-              <button
-                type="button"
-                className="mt-2 text-xs text-muted-foreground underline"
-                onClick={() => setCategories([])}
-              >
-                Clear category filter
-              </button>
-            )}
-          </Card>
+            {/* Status */}
+            <Select
+              value={status[0] ?? "all"}
+              onValueChange={(v) =>
+                v === "all" ? setStatus([]) : setStatus([v])
+              }
+            >
+              <SelectTrigger className="h-9 w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="reserved">Reserved</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {/* Status */}
-          <Card className="p-3">
-            <div className="text-sm font-medium mb-2">Status</div>
+            {/* Year */}
+            <Input
+              type="number"
+              placeholder="Year from"
+              className="h-9 w-[120px]"
+              value={yearFrom}
+              onChange={(e) => setYearFrom(e.target.value)}
+            />
+            <Input
+              type="number"
+              placeholder="Year to"
+              className="h-9 w-[120px]"
+              value={yearTo}
+              onChange={(e) => setYearTo(e.target.value)}
+            />
 
-            <div className="flex flex-wrap gap-4">
-              {["available", "reserved"].map((st) => {
-                const checked = status.includes(st);
+            {/* Rate */}
+            <Input
+              type="number"
+              placeholder="Rate from"
+              className="h-9 w-[120px]"
+              value={rateFrom}
+              onChange={(e) => setRateFrom(e.target.value)}
+            />
+            <Input
+              type="number"
+              placeholder="Rate to"
+              className="h-9 w-[120px]"
+              value={rateTo}
+              onChange={(e) => setRateTo(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
 
-                return (
-                  <label
-                    key={st}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        setStatus((prev) =>
-                          isChecked
-                            ? [...prev, st]
-                            : prev.filter((x) => x !== st),
-                        );
-                      }}
-                    />
-                    <span className="capitalize">{st}</span>
-                  </label>
-                );
-              })}
-            </div>
 
-            {status.length > 0 && (
-              <button
-                type="button"
-                className="mt-2 text-xs text-muted-foreground underline"
-                onClick={() => setStatus([])}
-              >
-                Clear status filter
-              </button>
-            )}
-          </Card>
-          <Card className="p-3">
-            <div className="text-sm font-medium mb-2">Year</div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">From</div>
-                <Input
-                  type="number"
-                  placeholder="e.g. 2015"
-                  value={yearFrom}
-                  onChange={(e) => setYearFrom(e.target.value)}
-                  min={1900}
-                  max={new Date().getFullYear() + 1}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">To</div>
-                <Input
-                  type="number"
-                  placeholder="e.g. 2030"
-                  value={yearTo}
-                  onChange={(e) => setYearTo(e.target.value)}
-                  min={1900}
-                  max={new Date().getFullYear() + 1}
-                />
-              </div>
-            </div>
-
-            {(yearFrom || yearTo) && (
-              <button
-                type="button"
-                className="mt-2 text-xs text-muted-foreground underline"
-                onClick={() => {
-                  setYearFrom("");
-                  setYearTo("");
-                }}
-              >
-                Clear year filter
-              </button>
-            )}
-          </Card>
-
-          <Card className="p-3">
-            <div className="text-sm font-medium mb-2">Daily Rate</div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">From</div>
-                <Input
-                  type="number"
-                  placeholder="e.g. 20"
-                  value={rateFrom}
-                  onChange={(e) => setRateFrom(e.target.value)}
-                  min={0}
-                  step="1"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">To</div>
-                <Input
-                  type="number"
-                  placeholder="e.g. 150"
-                  value={rateTo}
-                  onChange={(e) => setRateTo(e.target.value)}
-                  min={0}
-                  step="1"
-                />
-              </div>
-            </div>
-
-            {(rateFrom || rateTo) && (
-              <button
-                type="button"
-                className="mt-2 text-xs text-muted-foreground underline"
-                onClick={() => {
-                  setRateFrom("");
-                  setRateTo("");
-                }}
-              >
-                Clear rate filter
-              </button>
-            )}
-          </Card>
-
-          {/* Total Cars  */}
-          <Card className="border-muted/60">
-            <CardContent className="p-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Car className="h-4 w-4" />
-                <span>Total cars</span>
-              </div>
-
-              <div className="text-lg font-semibold tabular-nums">
-                {filteredCars.length}
-              </div>
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Card>
 
       {/* Table */}
       {loading ? (
@@ -554,6 +468,7 @@ const AdminCarsPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="View Details"
                           onClick={async () => {
                             const fullDetails = await fetchCarDetails(car.id);
                             if (fullDetails) {
@@ -569,6 +484,7 @@ const AdminCarsPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Edit Details"
                           onClick={async () => {
                             const fullDetails = await fetchCarDetails(car.id);
                             if (fullDetails) {
@@ -586,6 +502,7 @@ const AdminCarsPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Delete Car"
                           onClick={() =>
                             showConfirmDialog(
                               "Delete Car",
