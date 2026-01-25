@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import api from "@/lib/axios";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,49 +6,95 @@ import { Users, Car, CalendarCheck, DollarSign } from "lucide-react";
 
 import BookingsOverviewChart from "@/components/admin/BookingsOverviewChart";
 
-/* =====================================
+/* =====================================================
+   HELPERS
+===================================================== */
+const formatDate = (date) => date.toISOString().split("T")[0];
+
+/* =====================================================
    BUILD BOOKINGS CHART DATA
-===================================== */
-const buildBookingsChartData = (bookings, period) => {
+===================================================== */
+const buildBookingsChartData = (bookings, period, dateRange) => {
   const map = {};
   const now = new Date();
 
-  if (period === "week") {
-    // Last 7 days
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(now.getDate() - i);
-      const label = d.toLocaleDateString("en-US", { weekday: "short" });
+  const safeInc = (obj, key) => {
+    if (!obj[key]) obj[key] = 0;
+    obj[key]++;
+  };
 
-      map[label] = {
-        label,
+  /* =========================
+     DAILY (FROM → TO)
+  ========================== */
+  if (period === "day") {
+    const current = new Date(dateRange.from);
+    const end = new Date(dateRange.to);
+
+    // Create empty days
+    while (current <= end) {
+      const key = formatDate(current);
+      map[key] = {
+        label: current.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
         total: 0,
         pending: 0,
         completed: 0,
         cancelled: 0,
-        date: d.toDateString(),
       };
+      current.setDate(current.getDate() + 1);
     }
 
     bookings.forEach((b) => {
       if (!b.start_datetime) return;
+      const key = formatDate(new Date(b.start_datetime));
+      if (!map[key]) return;
 
-      const d = new Date(b.start_datetime);
-      const label = d.toLocaleDateString("en-US", { weekday: "short" });
-
-      if (!map[label]) return;
-
-      map[label].total++;
-      map[label][b.booking_request_status]++;
+      map[key].total++;
+      safeInc(map[key], b.booking_request_status);
     });
 
     return Object.values(map);
   }
 
+  /* =========================
+     WEEK (LAST 7 DAYS)
+  ========================== */
+  if (period === "week") {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(now.getDate() - i);
+      const key = formatDate(d);
+
+      map[key] = {
+        label: d.toLocaleDateString("en-US", { weekday: "short" }),
+        total: 0,
+        pending: 0,
+        completed: 0,
+        cancelled: 0,
+      };
+    }
+
+    bookings.forEach((b) => {
+      if (!b.start_datetime) return;
+      const key = formatDate(new Date(b.start_datetime));
+      if (!map[key]) return;
+
+      map[key].total++;
+      safeInc(map[key], b.booking_request_status);
+    });
+
+    return Object.values(map);
+  }
+
+  /* =========================
+     MONTH (CURRENT YEAR)
+  ========================== */
   if (period === "month") {
     const months = [
       "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec"
+      "Jul","Aug","Sep","Oct","Nov","Dec",
     ];
 
     months.forEach((m) => {
@@ -63,23 +109,22 @@ const buildBookingsChartData = (bookings, period) => {
 
     bookings.forEach((b) => {
       if (!b.start_datetime) return;
-
       const d = new Date(b.start_datetime);
       if (d.getFullYear() !== now.getFullYear()) return;
 
       const month = d.toLocaleString("en-US", { month: "short" });
-
       map[month].total++;
-      map[month][b.booking_request_status]++;
+      safeInc(map[month], b.booking_request_status);
     });
 
     return months.map((m) => map[m]);
   }
 
-  // YEAR
+  /* =========================
+     YEAR
+  ========================== */
   bookings.forEach((b) => {
     if (!b.start_datetime) return;
-
     const year = new Date(b.start_datetime).getFullYear();
 
     if (!map[year]) {
@@ -93,7 +138,7 @@ const buildBookingsChartData = (bookings, period) => {
     }
 
     map[year].total++;
-    map[year][b.booking_request_status]++;
+    safeInc(map[year], b.booking_request_status);
   });
 
   return Object.values(map).sort(
@@ -101,12 +146,13 @@ const buildBookingsChartData = (bookings, period) => {
   );
 };
 
-
-
+/* =====================================================
+   COMPONENT
+===================================================== */
 const AdminDashboard = () => {
-  /* =====================================
+  /* =========================
      STATS
-  ===================================== */
+  ========================== */
   const [stats, setStats] = useState({
     users: 0,
     cars: 0,
@@ -116,61 +162,49 @@ const AdminDashboard = () => {
 
   const [loadingStats, setLoadingStats] = useState(true);
 
-  /* =====================================
+  /* =========================
      CHART
-  ===================================== */
-  const [chartPeriod, setChartPeriod] = useState("month");
+  ========================== */
+  const today = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(today.getDate() - 29);
+
+  const [chartPeriod, setChartPeriod] = useState("day");
+  const [dateRange, setDateRange] = useState({
+    from: thirtyDaysAgo,
+    to: today,
+  });
+
   const [chartData, setChartData] = useState([]);
   const [loadingChart, setLoadingChart] = useState(true);
 
-  /* =====================================
+  /* =========================
      FETCH STATS
-  ===================================== */
+  ========================== */
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoadingStats(true);
 
-        // USERS
         const usersRes = await api.get("/admin/users");
-        const totalUsers = usersRes.data?.users?.total ?? 0;
-
-        // CARS
         const carsRes = await api.get("/cars");
-        const totalCars =
-          carsRes.data?.total ??
-          carsRes.data?.cars?.total ??
-          (Array.isArray(carsRes.data) ? carsRes.data.length : 0);
-
-        // BOOKINGS
-        let totalBookings = 0;
-        try {
-          const bookingsRes = await api.get("/admin/bookings");
-          totalBookings =
-            bookingsRes.data?.bookings?.total ??
-            bookingsRes.data?.total ??
-            0;
-        } catch {
-          console.warn("Bookings API not available");
-        }
-
-        // REVENUE
-        let totalRevenue = 0;
-        try {
-          const paymentsRes = await api.get("/admin/payments");
-          totalRevenue =
-            paymentsRes.data?.total_revenue ??
-            paymentsRes.data?.revenue ??
-            0;
-        } catch {
-          console.warn("Revenue API not available");
-        }
+        const bookingsRes = await api.get("/admin/bookings");
+        const paymentsRes = await api.get("/admin/payments");
 
         setStats({
-          users: totalUsers,
-          cars: totalCars,
-          bookings: totalBookings,
-          revenue: totalRevenue,
+          users: usersRes.data?.users?.total ?? 0,
+          cars:
+            carsRes.data?.cars?.total ??
+            carsRes.data?.total ??
+            0,
+          bookings:
+            bookingsRes.data?.bookings?.total ??
+            bookingsRes.data?.total ??
+            0,
+          revenue:
+            paymentsRes.data?.total_revenue ??
+            paymentsRes.data?.revenue ??
+            0,
         });
       } catch (err) {
         console.error("Dashboard stats error:", err);
@@ -182,44 +216,42 @@ const AdminDashboard = () => {
     fetchStats();
   }, []);
 
-  /* =====================================
-     FETCH CHART DATA
-  ===================================== */
+  /* =========================
+     FETCH CHART
+  ========================== */
   useEffect(() => {
-  const fetchBookingsChart = async () => {
-    try {
-      setLoadingChart(true);
+    const fetchChart = async () => {
+      try {
+        setLoadingChart(true);
 
-      const res = await api.get("/admin/bookings");
-      const rawBookings = res?.data?.bookings?.data || [];
+        const res = await api.get("/admin/bookings");
+        const bookings = res?.data?.bookings?.data || [];
 
-      const chartReadyData = buildBookingsChartData(
-        rawBookings,
-        chartPeriod
-      );
+        const data = buildBookingsChartData(
+          bookings,
+          chartPeriod,
+          dateRange
+        );
 
-      setChartData(chartReadyData);
-    } catch (err) {
-      console.error("Chart error:", err);
-      setChartData([]);
-    } finally {
-      setLoadingChart(false);
-    }
-  };
+        setChartData(data);
+      } catch (err) {
+        console.error("Chart error:", err);
+        setChartData([]);
+      } finally {
+        setLoadingChart(false);
+      }
+    };
 
-  fetchBookingsChart();
-}, [chartPeriod]);
+    fetchChart();
+  }, [chartPeriod, dateRange]);
 
-
-  /* =====================================
+  /* =========================
      STAT CARD
-  ===================================== */
+  ========================== */
   const StatCard = ({ title, value, icon: Icon, color }) => (
     <Card>
       <CardContent className="p-6 flex items-center gap-4">
-        <div
-          className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}
-        >
+        <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}>
           <Icon className="w-6 h-6 text-white" />
         </div>
         <div>
@@ -234,69 +266,94 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* TITLE */}
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Users"
-          value={stats.users}
-          icon={Users}
-          color="bg-blue-500"
-        />
-        <StatCard
-          title="Total Cars"
-          value={stats.cars}
-          icon={Car}
-          color="bg-[#00A19C]"
-        />
-        <StatCard
-          title="Total Bookings"
-          value={stats.bookings}
-          icon={CalendarCheck}
-          color="bg-purple-500"
-        />
-        <StatCard
-          title="Total Revenue"
-          value={`$${stats.revenue}`}
-          icon={DollarSign}
-          color="bg-green-500"
-        />
+        <StatCard title="Total Users" value={stats.users} icon={Users} color="bg-blue-500" />
+        <StatCard title="Total Cars" value={stats.cars} icon={Car} color="bg-[#00A19C]" />
+        <StatCard title="Total Bookings" value={stats.bookings} icon={CalendarCheck} color="bg-purple-500" />
+        <StatCard title="Total Revenue" value={`$${stats.revenue}`} icon={DollarSign} color="bg-green-500" />
       </div>
 
       {/* BOOKING OVERVIEW */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Booking Overview</h2>
+  <CardContent className="p-6 space-y-4">
+    <div className="flex flex-wrap items-start justify-between gap-4">
+  <h2 className="text-lg font-semibold">Booking Overview</h2>
 
-            <select
-              value={chartPeriod}
-              onChange={(e) => setChartPeriod(e.target.value)}
-              className="border rounded-md px-3 py-1 text-sm bg-background"
-            >
-              <option value="week">Week</option>
-              <option value="month">Month</option>
-              <option value="year">Year</option>
-            </select>
-          </div>
+  {/* Controls */}
+  <div className="flex flex-col gap-3 min-w-[160px]">
+    {/* Period selector */}
+    <select
+      value={chartPeriod}
+      onChange={(e) => setChartPeriod(e.target.value)}
+      className="border rounded-md px-3 py-1 text-sm bg-background"
+    >
+      <option value="day">Daily</option>
+      <option value="week">Week</option>
+      <option value="month">Month</option>
+      <option value="year">Year</option>
+    </select>
 
-          <div className="w-full h-[320px] min-h-[320px]">
-            {loadingChart ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Loading chart data...
-              </div>
-            ) : chartData.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                No booking data
-              </div>
-            ) : (
-              <BookingsOverviewChart data={chartData} />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+    {/* Date range (stacked under selector) */}
+    {chartPeriod === "day" && (
+      <div className="flex flex-col gap-2">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">
+            From
+          </label>
+          <input
+            type="date"
+            value={formatDate(dateRange.from)}
+            onChange={(e) =>
+              setDateRange((p) => ({
+                ...p,
+                from: new Date(e.target.value),
+              }))
+            }
+            className="border rounded-md px-2 py-1 text-sm w-full"
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">
+            To
+          </label>
+          <input
+            type="date"
+            value={formatDate(dateRange.to)}
+            onChange={(e) =>
+              setDateRange((p) => ({
+                ...p,
+                to: new Date(e.target.value),
+              }))
+            }
+            className="border rounded-md px-2 py-1 text-sm w-full"
+          />
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
+
+    {/* Chart */}
+    <div className="w-full h-[320px]">
+      {loadingChart ? (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          Loading chart data...
+        </div>
+      ) : chartData.length === 0 ? (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          No booking data
+        </div>
+      ) : (
+        <BookingsOverviewChart data={chartData} />
+      )}
+    </div>
+  </CardContent>
+</Card>
     </div>
   );
 };
