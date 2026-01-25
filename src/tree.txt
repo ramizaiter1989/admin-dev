@@ -74,6 +74,9 @@
 │   ├── useAppFeesBalance.js
 │   ├── useAuth.js
 │   ├── useFeaturedCars.js
+│   ├── useNotifications.js
+│   ├── useOtps.js
+│   ├── useSuggestions.js
 │   ├── use-toast.js
 │   └── useUpdateAccess.js
 ├── i18n
@@ -107,7 +110,10 @@
 │   │   ├── AdminFeaturedCarsPage.jsx
 │   │   ├── AdminHolidaysPage.jsx
 │   │   ├── AdminLayout.jsx
+│   │   ├── AdminNotificationsPage.jsx
+│   │   ├── AdminOtpsPage.jsx
 │   │   ├── AdminPaymentsPage.jsx
+│   │   ├── AdminSuggestionsPage.jsx
 │   │   └── AdminUsersPage.jsx
 │   ├── AdminAuthPage.jsx
 │   ├── AdminPanelPage.jsx
@@ -122,4 +128,4 @@
     ├── localStorage.js
     └── updateAccessHandler.js
 
-15 directories, 108 files
+15 directories, 114 files

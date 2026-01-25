@@ -95,7 +95,7 @@ export default function AdminOtpsPage() {
                   <TableCell>{otp.id}</TableCell>
                   <TableCell>{otp.phone_number}</TableCell>
                   <TableCell className="font-mono">
-                    {otp.otp}
+                    {otp.code}
                   </TableCell>
                   <TableCell>
                     {new Date(otp.created_at).toLocaleString()}

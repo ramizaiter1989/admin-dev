@@ -4,6 +4,7 @@ module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}"
+    
   ],
   theme: {
     extend: {
@@ -29,6 +30,7 @@ module.exports = {
         "destructive-foreground": "hsl(var(--destructive-foreground))",
         success: "hsl(var(--success))",
         "success-foreground": "hsl(var(--success-foreground))",
+
       },
       borderRadius: {
         DEFAULT: "var(--radius)",
