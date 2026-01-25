@@ -41,4 +41,32 @@
   text-decoration: underline;
 }
 
+/* --- Calendar fix: hide filler days + stop range leaking into them --- */
+.rdp-day_hidden,
+.rdp-day_outside {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* remove any background from their cells (including range middle) */
+.rdp-cell:has(.rdp-day_hidden),
+.rdp-cell:has(.rdp-day_outside) {
+  background: transparent !important;
+}
+
+.rdp-cell.rdp-range_middle:has(.rdp-day_hidden),
+.rdp-cell.rdp-range_middle:has(.rdp-day_outside) {
+  background: transparent !important;
+}
+
+/* also protect if background is applied on the button itself */
+.rdp-day_hidden.day-range-middle,
+.rdp-day_outside.day-range-middle,
+.rdp-day_hidden.day-range-start,
+.rdp-day_outside.day-range-start,
+.rdp-day_hidden.day-range-end,
+.rdp-day_outside.day-range-end {
+  background: transparent !important;
+}
+
 /* End Tony Update  */

@@ -36,11 +36,17 @@ import {
   CheckCircle2,
   AlertTriangle,
   RefreshCw,
-  ArrowUpDown,
   Calendar as CalendarIcon,
 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
 
 /* ================= CONFIG ================= */
 
@@ -84,6 +90,9 @@ export default function AdminBookingsPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
+
+  /* ----------  Date Filter ---------- */
+  const [dateRange, setDateRange] = useState(undefined);
 
   /* ================= FETCH ================= */
 
@@ -137,6 +146,19 @@ export default function AdminBookingsPage() {
       return null;
     }
   };
+
+  const startOfDay = (d) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+
+  const endOfDay = (d) => {
+    const x = new Date(d);
+    x.setHours(23, 59, 59, 999);
+    return x;
+  };
+
   // End Tony Update
 
   /* ================= FILTER / SORT ================= */
@@ -185,6 +207,23 @@ export default function AdminBookingsPage() {
         (b) => (b.payment_status ?? "").toLowerCase() === paymentStatus,
       );
     }
+    // date range filter (by booking start_datetime)
+    if (dateRange?.from || dateRange?.to) {
+      const from = dateRange?.from
+        ? startOfDay(dateRange.from).getTime()
+        : null;
+      const to = dateRange?.to ? endOfDay(dateRange.to).getTime() : null;
+
+      data = data.filter((b) => {
+        const t = new Date(b.start_datetime ?? 0).getTime();
+        if (!t) return false;
+
+        if (from !== null && t < from) return false;
+        if (to !== null && t > to) return false;
+
+        return true;
+      });
+    }
 
     // sort (dropdown)
     data.sort((a, b) => {
@@ -223,7 +262,7 @@ export default function AdminBookingsPage() {
     });
 
     return data;
-  }, [bookings, search, clients, status, paymentStatus, sortBy]);
+  }, [bookings, search, clients, status, paymentStatus, sortBy, dateRange]);
 
   const totalBookingsAmount = useMemo(() => {
     return filteredBookings.reduce(
@@ -329,6 +368,67 @@ export default function AdminBookingsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+
+          <Card className="p-3">
+            <div className="text-sm font-medium mb-2">Date</div>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="flex items-center gap-2">
+                  {/* From */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 px-2 text-xs justify-start gap-2 w-40"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                    {dateRange?.from
+                      ? format(dateRange.from, "EEE, MM/dd")
+                      : "From Date"}
+                  </Button>
+
+                  {/* To */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 px-2 text-xs justify-start gap-2 w-40"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                    {dateRange?.to
+                      ? format(dateRange.to, "EEE, MM/dd")
+                      : "To Date"}
+                  </Button>
+
+                  {/* Clear */}
+                  {(dateRange?.from || dateRange?.to) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-8 text-xs"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setDateRange(undefined);
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </PopoverTrigger>
+
+              <PopoverContent align="start" className="p-3 w-auto">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  showOutsideDays={false}
+                  weekStartsOn={1}
+                  className="rounded-md"
+                />
+              </PopoverContent>
+            </Popover>
+          </Card>
 
           <Card className="p-3">
             <div className="text-sm font-medium mb-2">Status</div>
