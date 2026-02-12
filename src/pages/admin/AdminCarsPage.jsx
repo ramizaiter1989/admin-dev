@@ -71,20 +71,38 @@ const AdminCarsPage = () => {
      Fetch cars
   ============================ */
   useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const res = await api.get("/admin/cars");
-        setCars(res.data.cars.data);
-        setTotal(res.data.cars.total);
-      } catch (err) {
-        console.error("Failed to load cars", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchCars = async () => {
+    try {
+      setLoading(true);
 
-    fetchCars();
-  }, []);
+      let allCars = [];
+      let currentPage = 1;
+      let lastPage = 1;
+
+      do {
+        const res = await api.get(`/admin/cars?page=${currentPage}`);
+
+        const pageData = res.data.cars;
+        allCars = [...allCars, ...pageData.data];
+
+        lastPage = pageData.last_page;
+        currentPage++;
+
+      } while (currentPage <= lastPage);
+
+      setCars(allCars);
+      setTotal(allCars.length);
+
+    } catch (err) {
+      console.error("Failed to load cars", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchCars();
+}, []);
+
   // Start tony Update
   // Fetch car details
   const fetchCarDetails = async (id) => {

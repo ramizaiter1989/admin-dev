@@ -68,24 +68,43 @@ const AdminUsersPage = () => {
      Fetch users
   ============================ */
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await api.get("/admin/users");
-        setUsers(res.data?.users?.data || []);
-        setTotal(res.data?.users?.total || 0);
-      } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to load users",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
 
-    fetchUsers();
-  }, [toast]);
+      let allUsers = [];
+      let currentPage = 1;
+      let lastPage = 1;
+
+      do {
+        const res = await api.get(`/admin/users?page=${currentPage}`);
+        const pageData = res.data?.users;
+
+        if (!pageData) break;
+
+        allUsers = [...allUsers, ...(pageData.data || [])];
+        lastPage = pageData.last_page || 1;
+
+        currentPage++;
+      } while (currentPage <= lastPage);
+
+      setUsers(allUsers);
+      setTotal(allUsers.length);
+
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load users",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUsers();
+}, [toast]);
+
 
   /* ============================
      Fetch user details tony 
