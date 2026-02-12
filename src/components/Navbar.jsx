@@ -28,8 +28,6 @@ export const Navbar = () => {
     if (shouldBeDark) document.documentElement.classList.add('dark');
   }, []);
 
-  // ✅ Favorite count from API (Laravel)
-  // GET /cars/favorites/list returns: { favorites: { total, ... } }
   const fetchFavCount = useCallback(async () => {
     try {
       const res = await api.get('/cars/favorites/list', {
@@ -45,13 +43,15 @@ export const Navbar = () => {
   }, []);
 
   useEffect(() => {
+    if (isAuthenticated) {
     fetchFavCount();
+  }
 
     const onFavUpdated = () => fetchFavCount();
     window.addEventListener('favoritesUpdated', onFavUpdated);
 
     return () => window.removeEventListener('favoritesUpdated', onFavUpdated);
-  }, [fetchFavCount, location.pathname]);
+  }, [fetchFavCount, isAuthenticated, location.pathname]);
 
   // Scroll shadow
   useEffect(() => {

@@ -51,6 +51,9 @@ const FeedbacksModal = ({ feedbacks, onClose }) => {
  * CarCard - Compact Design
  */
 export const CarCard = ({ car, forceFavorite = false, onToggleFavoriteApi }) => {
+  if (!car) {
+    return null; // or a skeleton / placeholder
+  }
   const [favorite, setFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);

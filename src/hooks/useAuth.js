@@ -63,6 +63,8 @@ export const useAuth = () => {
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
+    //force refresh to login page
+    window.location.replace("/admin-auth");
   };
 
   // Role checking helpers
